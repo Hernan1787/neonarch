@@ -2,8 +2,9 @@
 #  NeonArch — i3 configuration
 #  Shortcut reference: docs/cheatsheet.md
 # =============================================================================
-set $mod Mod4                       # Super (Windows key)
-set $term alacritty
+# Super (Windows key)
+set $mod Mod4
+set $term xterm
 
 font pango:JetBrainsMono Nerd Font 10
 floating_modifier $mod
@@ -31,10 +32,14 @@ client.urgent           $magenta  $magenta  $void  $magenta  $magenta
 # =============================================================================
 #  MANDATORY SHORTCUTS (assignment A.5, "Base obligatoria")
 # =============================================================================
-bindsym $mod+Return exec $term                                   # open terminal
-bindsym $mod+w      kill                                         # close active window
-bindsym $mod+q      kill                                         # (alias) close active window
-bindsym $mod+d      exec --no-startup-id rofi -show drun         # application launcher
+# open terminal
+bindsym $mod+Return exec $term
+# close active window
+bindsym $mod+w      kill
+# (alias) close active window
+bindsym $mod+q      kill
+# application launcher
+bindsym $mod+d      exec --no-startup-id rofi -show drun
 
 set $ws1 "1"
 set $ws2 "2"

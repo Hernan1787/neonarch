@@ -304,7 +304,9 @@ Then run the bootstrap (installs i3, our dotfiles, commands and services):
 | 9 | Hernán | 13 | `sed: unterminated 's' command` editing sudoers | Missing `/` delimiter | Corrected and validated with `visudo -c` |
 | 10 | Hernán | 14 | `loader.conf` still showed defaults (`#timeout 3`) | Wrote to `/boot/loader.conf` instead of `/boot/loader/loader.conf` | Removed the stray file, wrote to the correct path |
 | 11 | Hernán | 14 | Boot entry ended in `rm` instead of `rw` | Typo in the kernel parameter (root would stay read-only) | `sed -i 's/ rm$/ rw/'` and verified with `cat` |
-| 12 | | | | | |
+| 12 | Hernán | 16 | i3 showed *"You have an error in your i3 config file!"*, no shortcut worked | Comments at the end of config lines (`set $mod Mod4  # Super`) — i3 only allows comments on their own line | Moved the comments (`sed`), validated with `i3 -C -c ~/.config/i3/config` |
+| 13 | Hernán | 16 | `Super+Enter` opened nothing; `pgrep -a alacritty` listed 21 hung processes and RAM grew from 178 MiB to 1.6 GiB; later the whole X display stayed black | Alacritty renders with OpenGL; the VirtualBox VMSVGA adapter has no 3D acceleration and the GL initialisation hung (also with `LIBGL_ALWAYS_SOFTWARE=1`) | Diagnosed from tty2 (`showkey -k` proved the Super key arrived: keycode 125). Replaced the terminal with **xterm** (CPU-rendered via X11) and rebooted |
+| 14 | | | | | |
 
 ### Known pitfalls (check these first)
 

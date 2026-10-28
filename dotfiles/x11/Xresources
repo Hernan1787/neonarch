@@ -1,0 +1,46 @@
+! =============================================================================
+!  NeonArch — xterm theme (loaded by ~/.xinitrc with xrdb)
+!  xterm is rendered on the CPU through X11 (Xft). We use it instead of a
+!  GPU-accelerated terminal because the VM's virtual GPU has no 3D support
+!  (see docs/bitacora_ia.md, entry 5).
+! =============================================================================
+XTerm*termName:          xterm-256color
+XTerm*locale:            true
+XTerm*utf8:              always
+XTerm*faceName:          JetBrainsMono Nerd Font
+XTerm*faceSize:          11
+XTerm*internalBorder:    10
+XTerm*scrollBar:         false
+XTerm*saveLines:         10000
+XTerm*metaSendsEscape:   true
+XTerm*selectToClipboard: true
+XTerm*cursorBlink:       true
+XTerm*pointerShape:      left_ptr
+
+! Ctrl+Shift+C / Ctrl+Shift+V copy and paste (clipboard shared with the host)
+XTerm*VT100.translations: #override \n\
+    Ctrl Shift <Key>C: copy-selection(CLIPBOARD) \n\
+    Ctrl Shift <Key>V: insert-selection(CLIPBOARD)
+
+! --- Neon palette ------------------------------------------------------------
+XTerm*background:        #0a0a12
+XTerm*foreground:        #e6e6ff
+XTerm*cursorColor:       #00f0ff
+XTerm*highlightColor:    #ff2bd6
+XTerm*highlightTextColor:#0a0a12
+XTerm*color0:   #14142b
+XTerm*color1:   #ff3864
+XTerm*color2:   #39ff14
+XTerm*color3:   #ffe600
+XTerm*color4:   #3d7bff
+XTerm*color5:   #ff2bd6
+XTerm*color6:   #00f0ff
+XTerm*color7:   #e6e6ff
+XTerm*color8:   #2a2a4a
+XTerm*color9:   #ff6b8b
+XTerm*color10:  #7dff5c
+XTerm*color11:  #fff35c
+XTerm*color12:  #6f9bff
+XTerm*color13:  #ff6be4
+XTerm*color14:  #5cf7ff
+XTerm*color15:  #ffffff

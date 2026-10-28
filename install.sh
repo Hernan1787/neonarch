@@ -105,7 +105,7 @@ stage_dotfiles() {
     link dotfiles/x11/xinitrc            "$HOME/.xinitrc"
     link dotfiles/i3/config              "$HOME/.config/i3/config"
     link dotfiles/i3status/config        "$HOME/.config/i3status/config"
-    link dotfiles/alacritty/alacritty.toml "$HOME/.config/alacritty/alacritty.toml"
+    link dotfiles/x11/Xresources         "$HOME/.Xresources"
     link dotfiles/rofi/config.rasi       "$HOME/.config/rofi/config.rasi"
     link dotfiles/dunst/dunstrc          "$HOME/.config/dunst/dunstrc"
 }

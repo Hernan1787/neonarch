@@ -44,7 +44,28 @@
 | How it was validated | `shellcheck` on all scripts; `install.sh` run twice in a test environment → second run reported 0 changes (idempotent); `neon-info` executed and each value compared with `free -m`, `lscpu`, `lspci -k`, `findmnt /`. *(Pending: execution on both Arch VMs, logs in `logs/`.)* |
 
 ### Entry 4 — ⚠️ AI error #2
-*(To be completed by the team: the next time an AI answer is wrong, record it here with the exact error and how you detected it.)*
+| Field | Content |
+|---|---|
+| Date · member | 2026-10-28 · Hernán Alonso Gutiérrez Quesada |
+| Tool | Claude (Anthropic) |
+| Component | Layer 1 / Layer 3 (`dotfiles/i3/config`) |
+| Purpose | Generate the i3 configuration with the mandatory shortcuts |
+| Summarised query | "Write the i3 config with Super+Enter, Super+W/Q, Super+D and Super+1..9." |
+| Result obtained | A config with explanatory comments at the end of each line, e.g. `set $mod Mod4   # Super (Windows key)` and `bindsym $mod+w kill   # close active window`. |
+| Validated / corrected / discarded | **Corrected.** On first login i3 showed *"You have an error in your i3 config file!"* and no shortcut worked. i3 does **not** support trailing comments: `$mod` became the literal text `Mod4 # Super (Windows key)`, so every `bindsym $mod+…` was invalid. Fixed by moving every comment to its own line. |
+| How it was validated | `i3 -C -c dotfiles/i3/config` (config check mode) printed the parse errors pointing at line 9; after the fix it prints nothing and i3 starts without the error bar. Reference: i3 User's Guide, section "Comments" (comments must start at the beginning of a line). |
+
+### Entry 5 — ⚠️ AI error #3
+| Field | Content |
+|---|---|
+| Date · member | 2026-10-28 · Hernán Alonso Gutiérrez Quesada |
+| Tool | Claude (Anthropic) |
+| Component | Layer 1 (desktop: terminal for `Super+Enter`) |
+| Purpose | Choose the terminal emulator |
+| Summarised query | Part of the dotfiles generation (entry 3). |
+| Result obtained | Chose Alacritty, assuming that software OpenGL (Mesa llvmpipe) would be enough inside the VM. |
+| Validated / corrected / discarded | **Discarded.** In the VirtualBox VM (VMSVGA, no 3D) Alacritty never drew a window: each `Super+Enter` left a hung process (21 of them, RAM 178 MiB → 1.6 GiB), forcing `LIBGL_ALWAYS_SOFTWARE=1` did not help and the X display ended up black. Replaced by xterm, rendered on the CPU. |
+| How it was validated | From tty2: `sudo showkey -k` (Super = keycode 125 arrives, so the shortcut was fine), `pgrep -a alacritty` (21 processes), `neon-info --short` (RAM growth). After switching to xterm the shortcut opens a terminal immediately. |
 
 ---
 

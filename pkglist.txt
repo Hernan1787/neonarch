@@ -29,7 +29,7 @@ i3-wm
 i3status
 i3lock
 rofi                # application launcher (Super+D)
-alacritty           # terminal (Super+Enter)
+xterm               # terminal (Super+Enter); CPU-rendered, works without 3D GPU
 dunst               # notification daemon
 libnotify           # notify-send, used by our commands/shortcuts
 feh                 # wallpaper

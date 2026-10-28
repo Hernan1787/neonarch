@@ -24,8 +24,7 @@ __neon_prompt() {
 }
 PROMPT_COMMAND=__neon_prompt
 
-# Show system info in the first terminal of the session
-if [[ -z ${NEON_GREETED:-} ]] && command -v neon-info >/dev/null; then
-    export NEON_GREETED=1
+# Show a one-line system summary in every new terminal
+if command -v neon-info >/dev/null; then
     neon-info --short 2>/dev/null || true
 fi

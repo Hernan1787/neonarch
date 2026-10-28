@@ -6,7 +6,7 @@
 
 | Shortcut | Action | Designed by |
 |---|---|---|
-| `Super + Enter` | Open terminal (Alacritty) | Assignment |
+| `Super + Enter` | Open terminal (xterm) | Assignment |
 | `Super + W` / `Super + Q` | Close the active window | Assignment |
 | `Super + D` | Application launcher (rofi) | Assignment |
 | `Super + 1…9` | Switch to workspace 1…9 | Assignment |

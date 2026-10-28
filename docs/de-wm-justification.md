@@ -3,7 +3,9 @@
 **Owner:** Royner Baltodano Sánchez
 
 ## Choice
-**i3** (tiling window manager on X11) with i3status, rofi, Alacritty and dunst.
+**i3** (tiling window manager on X11) with i3status, rofi, xterm and dunst.
+
+Terminal: we first used Alacritty (GPU/OpenGL-rendered) but it hung without drawing a window in the VM, because VirtualBox's VMSVGA adapter has no 3D acceleration. We replaced it with **xterm**, rendered on the CPU through X11, which also uses less memory.
 
 ## Why (qualitative)
 - **Low resource usage:** i3 is a single process that only manages windows; there is no

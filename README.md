@@ -63,7 +63,7 @@ neonarch/
 ├── install.sh                 # idempotent bootstrap
 ├── pkglist.txt                # official packages
 ├── config/                    # services.txt, zram, sysctl, snapper…
-├── dotfiles/                  # bash, xinitrc, i3, i3status, alacritty, rofi, dunst
+├── dotfiles/                  # bash, xinitrc + Xresources (xterm), i3, i3status, rofi, dunst
 ├── bin/                       # own commands (neon-info, …)
 ├── systemd/                   # unit files, timers, drop-ins, helper scripts
 ├── pacman/                    # hooks/ and pkgbuild/
