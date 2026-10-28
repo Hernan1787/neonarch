@@ -1,0 +1,5 @@
+# Units enabled by install.sh (stage "services").
+# Format:  <system|user>  <unit name>
+# Each topic adds its units here when they exist in systemd/system/.
+system  NetworkManager.service
+system  systemd-boot-update.service

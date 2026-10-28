@@ -1,0 +1,22 @@
+#!/bin/sh
+# ~/.xinitrc — NeonArch
+# Session selection (used for the DE/WM comparison in docs/de-wm-justification.md):
+#   startx                      -> i3 (default)
+#   NEON_SESSION=xfce startx -> XFCE (only installed temporarily for the measurement)
+
+# Load the system-wide X init scripts (D-Bus activation environment, etc.)
+if [ -d /etc/X11/xinit/xinitrc.d ]; then
+    for f in /etc/X11/xinit/xinitrc.d/?*.sh; do [ -x "$f" ] && . "$f"; done
+    unset f
+fi
+
+setxkbmap us 2>/dev/null           # keyboard layout (we use US; change to "latam" if needed)
+
+# VirtualBox guest additions: shared clipboard and automatic resolution
+command -v VBoxClient-all >/dev/null && VBoxClient-all &
+command -v spice-vdagent  >/dev/null && spice-vdagent &
+
+case "${NEON_SESSION:-i3}" in
+    xfce) exec startxfce4 ;;
+    *)    exec i3 ;;
+esac

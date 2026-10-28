@@ -1,0 +1,53 @@
+# NeonArch — package list (official repositories only, no AUR)
+# One package per line. Lines starting with # are comments.
+# install.sh installs only what is missing (pacman -T), so it is safe to re-run.
+# VM guest tools are added automatically by install.sh according to systemd-detect-virt.
+
+# --- Base tooling -----------------------------------------------------------
+base-devel          # makepkg + gcc (Topic 6 PKGBUILD, Topic 1 C helpers)
+git
+python              # our own commands (bin/) are written in Python 3
+bash-completion
+man-db
+man-pages
+less
+htop
+lsof
+pciutils            # lspci -k  (GPU/NPU driver identification)
+usbutils            # lsusb
+hwdata              # pci.ids database: neon-info resolves PCI vendor/device names
+efibootmgr          # Layer 1 evidence (UEFI boot entries)
+
+# --- Desktop: i3 on X11 ------------------------------------------------------
+xorg-server
+xorg-xinit
+xorg-xsetroot
+xorg-xrandr
+xorg-setxkbmap
+mesa                # software OpenGL (llvmpipe) inside VMs without 3D acceleration
+i3-wm
+i3status
+i3lock
+rofi                # application launcher (Super+D)
+alacritty           # terminal (Super+Enter)
+dunst               # notification daemon
+libnotify           # notify-send, used by our commands/shortcuts
+feh                 # wallpaper
+xclip
+maim                # screenshots
+ttf-dejavu
+noto-fonts
+ttf-jetbrains-mono-nerd
+
+# --- OS topics: measurement and configuration -------------------------------
+stress-ng           # Topic 1 (CPU-bound load) and Topic 2 (memory pressure)
+sysstat             # mpstat / pidstat / iostat
+strace
+fio                 # Topic 3: filesystem benchmark
+snapper             # Topic 3: automatic btrfs snapshots
+zram-generator      # Topic 2: compressed swap in RAM
+pacman-contrib      # Topic 6: pactree, checkupdates
+nftables            # Topic 9: firewall
+openssh             # Topic 9: hardened SSH
+nmap                # Topic 9: scan from the other VM
+acl                 # Topic 9: setfacl / getfacl

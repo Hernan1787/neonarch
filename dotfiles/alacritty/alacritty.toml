@@ -1,0 +1,44 @@
+# NeonArch — Alacritty (neon palette)
+[window]
+padding = { x = 10, y = 8 }
+opacity = 0.96
+
+[font]
+normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+bold   = { family = "JetBrainsMono Nerd Font", style = "Bold" }
+size = 10.5
+
+[cursor]
+style = { shape = "Beam", blinking = "On" }
+
+[colors.primary]
+background = "#0a0a12"
+foreground = "#e6e6ff"
+
+[colors.cursor]
+text   = "#0a0a12"
+cursor = "#00f0ff"
+
+[colors.selection]
+text       = "#0a0a12"
+background = "#ff2bd6"
+
+[colors.normal]
+black   = "#14142b"
+red     = "#ff3864"
+green   = "#39ff14"
+yellow  = "#ffe600"
+blue    = "#3d7bff"
+magenta = "#ff2bd6"
+cyan    = "#00f0ff"
+white   = "#e6e6ff"
+
+[colors.bright]
+black   = "#2a2a4a"
+red     = "#ff6b8b"
+green   = "#7dff5c"
+yellow  = "#fff35c"
+blue    = "#6f9bff"
+magenta = "#ff6be4"
+cyan    = "#5cf7ff"
+white   = "#ffffff"

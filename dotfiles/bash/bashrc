@@ -1,0 +1,31 @@
+# ~/.bashrc — NeonArch (interactive shells)
+[[ $- != *i* ]] && return
+
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
+
+HISTSIZE=10000
+HISTFILESIZE=20000
+HISTCONTROL=ignoreboth
+shopt -s histappend checkwinsize
+
+[[ -r /usr/share/bash-completion/bash_completion ]] && . /usr/share/bash-completion/bash_completion
+
+alias ls='ls --color=auto'
+alias ll='ls -lah'
+alias grep='grep --color=auto'
+alias ip='ip -color=auto'
+
+# Prompt:  user@host  ~/dir  (red ✗ + exit code when the last command failed)
+__neon_prompt() {
+    local s=$?
+    local err=""
+    ((s)) && err="\[\e[31m\]✗ $s "
+    PS1="${err}\[\e[1;38;2;0;240;255m\]\u\[\e[38;2;255;43;214m\]@\h\[\e[0m\] \[\e[38;2;57;255;20m\]\w\[\e[0m\] \[\e[38;2;255;43;214m\]▸\[\e[0m\] "
+}
+PROMPT_COMMAND=__neon_prompt
+
+# Show system info in the first terminal of the session
+if [[ -z ${NEON_GREETED:-} ]] && command -v neon-info >/dev/null; then
+    export NEON_GREETED=1
+    neon-info --short 2>/dev/null || true
+fi

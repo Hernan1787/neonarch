@@ -1,0 +1,22 @@
+/* NeonArch — rofi launcher (Super+D) */
+configuration {
+    modi: "drun,run,window";
+    show-icons: false;
+    display-drun: "LAUNCH";
+    display-run: "RUN";
+    display-window: "WINDOWS";
+    font: "JetBrainsMono Nerd Font 11";
+}
+* {
+    void: #0a0a12; panel: #14142b; cyan: #00f0ff; magenta: #ff2bd6; text: #e6e6ff;
+    background-color: @void;
+    text-color: @text;
+}
+window   { width: 38%; border: 2px; border-color: @cyan; padding: 14px; }
+inputbar { children: [prompt, textbox-sep, entry]; spacing: 8px; padding: 0 0 10px 0; }
+textbox-sep { expand: false; str: "▸"; text-color: @magenta; }
+prompt   { text-color: @cyan; }
+entry    { placeholder: "type to search…"; placeholder-color: #555577; }
+listview { lines: 8; }
+element  { padding: 4px 8px; }
+element selected { background-color: @magenta; text-color: @void; }

@@ -1,0 +1,12 @@
+# ~/.bash_profile — NeonArch (login shells)
+export PATH="$HOME/.local/bin:$PATH"
+export EDITOR=nano
+export TERMINAL=alacritty
+
+[[ -f ~/.bashrc ]] && . ~/.bashrc
+
+# Start the graphical session automatically on tty1 only.
+# Other ttys (Ctrl+Alt+F2..F6) stay as plain consoles: useful for recovery.
+if [[ -z ${DISPLAY:-} && ${XDG_VTNR:-0} -eq 1 ]]; then
+    exec startx
+fi

@@ -1,0 +1,497 @@
+#!/usr/bin/env python3
+"""
+neon-info — NeonArch system report (Layer 3, mandatory command).
+
+Every value is read directly from the kernel interfaces /proc and /sys or
+obtained through system calls (uname, sysinfo-like statvfs, sched_getscheduler,
+sched_getaffinity...). No neofetch/fastfetch or external commands are used.
+
+    neon-info            full report
+    neon-info --short    one-line summary (used when a terminal opens)
+    neon-info --sources  show which kernel interface each value comes from
+    neon-info --json     machine-readable output (for scripts/shortcuts)
+"""
+import argparse
+import glob
+import json
+import os
+import pwd
+import signal
+import sys
+import time
+
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)   # behave well in pipes (neon-info | head)
+
+# ----------------------------------------------------------------------------
+# small helpers
+# ----------------------------------------------------------------------------
+
+def read(path, default=None):
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            return f.read().strip()
+    except OSError:
+        return default
+
+
+def human(nbytes):
+    n = float(nbytes)
+    for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
+        if n < 1024 or unit == "TiB":
+            return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+        n /= 1024
+    return f"{n:.1f} TiB"
+
+
+def meminfo():
+    """/proc/meminfo -> dict of bytes"""
+    out = {}
+    for line in (read("/proc/meminfo", "") or "").splitlines():
+        key, _, rest = line.partition(":")
+        parts = rest.split()
+        if parts:
+            val = int(parts[0])
+            out[key] = val * 1024 if len(parts) > 1 and parts[1] == "kB" else val
+    return out
+
+
+# ----------------------------------------------------------------------------
+# PCI name database (hwdata) — optional, only to show human names
+# ----------------------------------------------------------------------------
+_PCI_DB = None
+
+
+def pci_names():
+    global _PCI_DB
+    if _PCI_DB is not None:
+        return _PCI_DB
+    vendors, devices = {}, {}
+    for path in ("/usr/share/hwdata/pci.ids", "/usr/share/misc/pci.ids"):
+        try:
+            with open(path, encoding="utf-8", errors="replace") as f:
+                vendor = None
+                for line in f:
+                    if line.startswith("#") or not line.strip():
+                        continue
+                    if line.startswith("C "):          # class section: stop
+                        break
+                    if not line.startswith("\t"):
+                        vid, _, name = line.strip().partition("  ")
+                        vendor = vid.lower()
+                        vendors[vendor] = name
+                    elif not line.startswith("\t\t") and vendor:
+                        did, _, name = line.strip().partition("  ")
+                        devices[(vendor, did.lower())] = name
+            break
+        except OSError:
+            continue
+    _PCI_DB = (vendors, devices)
+    return _PCI_DB
+
+
+# ----------------------------------------------------------------------------
+# collectors — each returns (value, source)
+# ----------------------------------------------------------------------------
+
+def get_os():
+    rel = {}
+    for line in (read("/etc/os-release", "") or "").splitlines():
+        k, _, v = line.partition("=")
+        rel[k] = v.strip('"')
+    name = rel.get("PRETTY_NAME", "Linux")
+    return f"NeonArch (based on {name})", "/etc/os-release"
+
+
+def get_kernel():
+    u = os.uname()                                   # uname(2)
+    return {
+        "release": u.release,
+        "machine": u.machine,
+        "hostname": u.nodename,
+        "version": u.version,
+    }, "uname(2) via os.uname()"
+
+
+def get_uptime():
+    secs = float((read("/proc/uptime", "0 0") or "0").split()[0])
+    d, rem = divmod(int(secs), 86400)
+    h, rem = divmod(rem, 3600)
+    m, _ = divmod(rem, 60)
+    txt = (f"{d}d " if d else "") + f"{h}h {m}m"
+    boot = "UEFI" if os.path.isdir("/sys/firmware/efi") else "BIOS (legacy)"
+    return {"seconds": secs, "text": txt, "firmware": boot}, "/proc/uptime, /sys/firmware/efi"
+
+
+def get_cpu():
+    model, flags = None, ""
+    for line in (read("/proc/cpuinfo", "") or "").splitlines():
+        if model is None and line.startswith(("model name", "Model", "Hardware")):
+            model = line.split(":", 1)[1].strip()
+        if line.startswith("flags") and not flags:
+            flags = line.split(":", 1)[1]
+    online = read("/sys/devices/system/cpu/online", "?")
+    logical = os.cpu_count()
+    allowed = len(os.sched_getaffinity(0))           # sched_getaffinity(2)
+    # physical cores = distinct (package, core_id) pairs in sysfs topology
+    cores = set()
+    for cpu in glob.glob("/sys/devices/system/cpu/cpu[0-9]*/topology"):
+        cores.add((read(f"{cpu}/physical_package_id"), read(f"{cpu}/core_id")))
+    governor = read("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
+    freq = read("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+    load = (read("/proc/loadavg", "0 0 0") or "0 0 0").split()[:3]
+    return {
+        "model": model or "unknown",
+        "physical_cores": len(cores) or None,
+        "logical_cpus": logical,
+        "online": online,
+        "affinity": allowed,
+        "governor": governor,
+        "cur_freq_mhz": int(freq) // 1000 if freq and freq.isdigit() else None,
+        "virtualized": " hypervisor" in f" {flags} ",
+        "loadavg": load,
+    }, "/proc/cpuinfo, /sys/devices/system/cpu/*, sched_getaffinity(2), /proc/loadavg"
+
+
+def get_accelerators():
+    """GPUs and NPUs from the PCI bus in sysfs, with the kernel driver bound to each."""
+    vendors, devices = pci_names()
+    found = []
+    for dev in sorted(glob.glob("/sys/bus/pci/devices/*")):
+        cls = (read(f"{dev}/class", "0x000000") or "0x000000")[2:]
+        base, sub = cls[0:2], cls[2:4]
+        if base == "03":
+            kind = {"00": "GPU (VGA)", "02": "GPU (3D)", "80": "GPU (display)"}.get(sub, "GPU")
+        elif base == "12":
+            kind = "NPU / accelerator"
+        else:
+            continue
+        vid = (read(f"{dev}/vendor", "") or "")[2:].lower()
+        did = (read(f"{dev}/device", "") or "")[2:].lower()
+        drv_link = f"{dev}/driver"
+        driver = os.path.basename(os.readlink(drv_link)) if os.path.islink(drv_link) else "none (no driver bound)"
+        name = devices.get((vid, did)) or f"[{vid}:{did}]"
+        vname = vendors.get(vid, vid)
+        found.append({
+            "type": kind,
+            "slot": os.path.basename(dev),
+            "name": f"{vname} {name}".strip(),
+            "driver": driver,
+        })
+    # NPUs exposed through the DRM "accel" class (intel_vpu, amdxdna...) even if not PCI class 0x12
+    for acc in sorted(glob.glob("/sys/class/accel/accel*")):
+        drv_link = os.path.join(acc, "device", "driver")
+        driver = os.path.basename(os.readlink(drv_link)) if os.path.islink(drv_link) else "unknown"
+        slot = os.path.basename(os.path.realpath(os.path.join(acc, "device")))
+        if not any(f["slot"] == slot for f in found):
+            found.append({"type": "NPU (accel)", "slot": slot, "name": os.path.basename(acc), "driver": driver})
+    has_npu = any("NPU" in f["type"] for f in found)
+    return {"devices": found, "npu_present": has_npu}, "/sys/bus/pci/devices/*/{class,vendor,device,driver}, /sys/class/accel"
+
+
+def get_memory():
+    m = meminfo()
+    total = m.get("MemTotal", 0)
+    avail = m.get("MemAvailable", 0)
+    swaps = []
+    lines = (read("/proc/swaps", "") or "").splitlines()[1:]
+    for line in lines:
+        p = line.split()
+        if len(p) >= 5:
+            swaps.append({
+                "device": p[0], "type": p[1],
+                "size": int(p[2]) * 1024, "used": int(p[3]) * 1024, "priority": int(p[4]),
+            })
+    zram = []
+    for z in sorted(glob.glob("/sys/block/zram*")):
+        mm = (read(f"{z}/mm_stat", "") or "").split()
+        if len(mm) < 3:
+            continue
+        orig, compr, total_used = int(mm[0]), int(mm[1]), int(mm[2])
+        algo = read(f"{z}/comp_algorithm", "")
+        algo = next((a.strip("[]") for a in algo.split() if a.startswith("[")), algo)
+        zram.append({
+            "device": os.path.basename(z),
+            "disksize": int(read(f"{z}/disksize", "0") or 0),
+            "orig_data": orig,
+            "compr_data": compr,
+            "mem_used": total_used,
+            "ratio": round(orig / compr, 2) if compr else None,
+            "algorithm": algo,
+        })
+    return {
+        "total": total,
+        "available": avail,
+        "used": total - avail,
+        "buffers_cache": m.get("Buffers", 0) + m.get("Cached", 0),
+        "swap_total": m.get("SwapTotal", 0),
+        "swap_used": m.get("SwapTotal", 0) - m.get("SwapFree", 0),
+        "swaps": swaps,
+        "zram": zram,
+    }, "/proc/meminfo, /proc/swaps, /sys/block/zram*/{mm_stat,comp_algorithm,disksize}"
+
+
+def get_processes():
+    states = {}
+    threads = 0
+    for pid in os.listdir("/proc"):
+        if not pid.isdigit():
+            continue
+        stat = read(f"/proc/{pid}/stat")
+        if not stat:
+            continue                                  # process exited meanwhile
+        # comm may contain spaces/parentheses: state is right after the last ')'
+        after = stat[stat.rfind(")") + 2:].split()
+        st = after[0]
+        threads += int(after[17]) if len(after) > 17 else 1
+        states[st] = states.get(st, 0) + 1
+    la = (read("/proc/loadavg", "") or "").split()
+    running, total_sched = (la[3].split("/") if len(la) > 3 else ("?", "?"))
+    names = {"R": "running", "S": "sleeping", "D": "disk-wait", "Z": "zombie",
+             "T": "stopped", "t": "traced", "I": "idle", "X": "dead"}
+    return {
+        "processes": sum(states.values()),
+        "threads": threads,
+        "by_state": {names.get(k, k): v for k, v in sorted(states.items())},
+        "runnable_now": running,
+        "kernel_entities": total_sched,
+    }, "/proc/[pid]/stat, /proc/loadavg"
+
+
+def get_scheduler():
+    rel = os.uname().release
+    try:
+        major, minor = (int(x) for x in rel.split(".")[:2])
+    except ValueError:
+        major, minor = 0, 0
+    fair = "EEVDF (Earliest Eligible Virtual Deadline First)" if (major, minor) >= (6, 6) \
+        else "CFS (Completely Fair Scheduler)"
+    ext_state = read("/sys/kernel/sched_ext/state")
+    ext_ops = read("/sys/kernel/sched_ext/root/ops")
+    if ext_state == "enabled" and ext_ops:
+        fair = f"sched_ext BPF scheduler '{ext_ops}' (replaces {fair.split()[0]})"
+    pol_names = {os.SCHED_OTHER: "SCHED_OTHER", os.SCHED_FIFO: "SCHED_FIFO", os.SCHED_RR: "SCHED_RR"}
+    for n in ("SCHED_BATCH", "SCHED_IDLE"):
+        if hasattr(os, n):
+            pol_names[getattr(os, n)] = n
+    own = pol_names.get(os.sched_getscheduler(0), "?")  # sched_getscheduler(2)
+    return {
+        "fair_class": fair,
+        "kernel": rel,
+        "autogroup": read("/proc/sys/kernel/sched_autogroup_enabled") == "1",
+        "rt_runtime_us": read("/proc/sys/kernel/sched_rt_runtime_us"),
+        "this_process_policy": own,
+        "this_process_nice": os.getpriority(os.PRIO_PROCESS, 0),   # getpriority(2)
+    }, "uname(2), /sys/kernel/sched_ext, /proc/sys/kernel/sched_*, sched_getscheduler(2), getpriority(2)"
+
+
+def get_rootfs():
+    src = fstype = opts = None
+    with open("/proc/self/mounts") as f:
+        for line in f:
+            p = line.split()
+            if len(p) >= 4 and p[1] == "/":
+                src, fstype, opts = p[0], p[2], p[3]      # last match wins (overmounts)
+    st = os.statvfs("/")                                  # statfs(2)
+    size = st.f_blocks * st.f_frsize
+    free = st.f_bavail * st.f_frsize
+    subvol = None
+    compress = None
+    for o in (opts or "").split(","):
+        if o.startswith("subvol="):
+            subvol = o.split("=", 1)[1]
+        if o.startswith("compress"):
+            compress = o.split("=", 1)[1] if "=" in o else o
+    return {
+        "source": src, "fstype": fstype, "subvolume": subvol, "compression": compress,
+        "size": size, "free": free, "used": size - free,
+    }, "/proc/self/mounts, statvfs(2)"
+
+
+def get_init():
+    comm = read("/proc/1/comm", "?")
+    target = None
+    if comm == "systemd":
+        target = os.path.basename(os.path.realpath("/etc/systemd/system/default.target"))
+    return {"pid1": comm, "default_target": target}, "/proc/1/comm, /etc/systemd/system/default.target"
+
+
+COLLECTORS = [
+    ("os", get_os), ("kernel", get_kernel), ("uptime", get_uptime), ("init", get_init),
+    ("cpu", get_cpu), ("accelerators", get_accelerators), ("memory", get_memory),
+    ("processes", get_processes), ("scheduler", get_scheduler), ("rootfs", get_rootfs),
+]
+
+
+def collect():
+    data, sources = {}, {}
+    for key, fn in COLLECTORS:
+        try:
+            data[key], sources[key] = fn()
+        except Exception as e:  # never crash the whole report for one section
+            data[key], sources[key] = {"error": str(e)}, "n/a"
+    return data, sources
+
+
+# ----------------------------------------------------------------------------
+# rendering
+# ----------------------------------------------------------------------------
+LOGO = r"""
+  ███╗   ██╗███████╗ ██████╗ ███╗   ██╗
+  ████╗  ██║██╔════╝██╔═══██╗████╗  ██║
+  ██╔██╗ ██║█████╗  ██║   ██║██╔██╗ ██║   A R C H
+  ██║╚██╗██║██╔══╝  ██║   ██║██║╚██╗██║   ─────────────
+  ██║ ╚████║███████╗╚██████╔╝██║ ╚████║   system stats HUD
+  ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝   /proc · /sys · syscalls
+"""
+
+
+class C:
+    def __init__(self, on):
+        self.on = on
+
+    def __call__(self, code, text):
+        return f"\033[{code}m{text}\033[0m" if self.on else str(text)
+
+    def lava(self, t):  return self("1;38;2;0;240;255", t)     # neon cyan  (labels)
+    def green(self, t): return self("38;2;57;255;20", t)       # acid green (good)
+    def pink(self, t):  return self("1;38;2;255;43;214", t)    # magenta    (headers, logo)
+    def volt(self, t):  return self("38;2;255;230;0", t)       # yellow     (warning)
+    def dim(self, t):   return self("2", t)
+    def bold(self, t):  return self("1", t)
+    def red(self, t):   return self("38;2;255;56;100", t)
+
+
+def bar(fraction, width=22, c=None):
+    fraction = max(0.0, min(1.0, fraction))
+    full = int(round(fraction * width))
+    s = "▰" * full + "▱" * (width - full)
+    if c is None:
+        return s
+    return c.red(s) if fraction > 0.85 else (c.volt(s) if fraction > 0.6 else c.green(s))
+
+
+def render(data, sources, c, show_sources):
+    out = []
+
+    def section(title):
+        out.append("")
+        out.append(f"  {c.pink('▸ ' + title)} {c.dim('─' * (58 - len(title)))}")
+
+    def row(label, value, key=None):
+        out.append(f"  {c.lava(label.ljust(14))} {value}")
+        if show_sources and key:
+            out.append(f"  {' ' * 14} {c.dim('↳ ' + sources.get(key, ''))}")
+
+    out.append(c.pink(LOGO.rstrip("\n")))
+    k, up, cpu = data["kernel"], data["uptime"], data["cpu"]
+    out.append("")
+    out.append(f"  {c.bold(pwd.getpwuid(os.getuid()).pw_name + '@' + k.get('hostname', '?'))}")
+    out.append("  " + c.dim("═" * 62))
+    section("SYSTEM")
+    row("OS", data["os"], "os")
+    row("Kernel", f"{k.get('release')} ({k.get('machine')})", "kernel")
+    row("Uptime", f"{up.get('text')}   firmware: {up.get('firmware')}", "uptime")
+    ini = data["init"]
+    row("Init", f"{ini.get('pid1')}  default target: {ini.get('default_target')}", "init")
+
+    cores = f"{cpu.get('physical_cores')} cores / {cpu.get('logical_cpus')} threads"
+    extra = []
+    if cpu.get("governor"):
+        extra.append(f"governor {cpu['governor']}")
+    if cpu.get("cur_freq_mhz"):
+        extra.append(f"{cpu['cur_freq_mhz']} MHz")
+    if cpu.get("virtualized"):
+        extra.append("virtualized")
+    section("HARDWARE")
+    row("CPU", f"{cpu.get('model')}", "cpu")
+    out.append(f"  {' ' * 14} {cores}" + (f"  ({', '.join(extra)})" if extra else ""))
+    out.append(f"  {' ' * 14} load avg {' '.join(cpu.get('loadavg', []))}")
+
+    acc = data["accelerators"]
+    devs = acc.get("devices", [])
+    if not devs:
+        row("GPU", "none detected on the PCI bus", "accelerators")
+    for i, d in enumerate(devs):
+        label = "GPU" if d["type"].startswith("GPU") else "NPU"
+        row(label, f"{d['name']}", "accelerators" if i == 0 else None)
+        out.append(f"  {' ' * 14} driver: {c.green(d['driver'])}  slot {d['slot']}  [{d['type']}]")
+    if not acc.get("npu_present"):
+        row("NPU", c.dim("not present"))
+
+    section("RESOURCES")
+    m = data["memory"]
+    if "total" in m:
+        frac = m["used"] / m["total"] if m["total"] else 0
+        row("Memory", f"{bar(frac, c=c)} {human(m['used'])} / {human(m['total'])}  "
+                      f"(available {human(m['available'])})", "memory")
+        if m["swap_total"]:
+            sfrac = m["swap_used"] / m["swap_total"]
+            row("Swap", f"{bar(sfrac, c=c)} {human(m['swap_used'])} / {human(m['swap_total'])}")
+            for s in m["swaps"]:
+                out.append(f"  {' ' * 14} {s['device']:<22} {s['type']:<9} prio {s['priority']:>4}  "
+                           f"{human(s['used'])} / {human(s['size'])}")
+        else:
+            row("Swap", c.dim("none configured"))
+        for z in m["zram"]:
+            ratio = f"{z['ratio']}:1" if z["ratio"] else "n/a (empty)"
+            row("zram", f"{z['device']} {z['algorithm']}  stores {human(z['orig_data'])} "
+                        f"in {human(z['mem_used'])} RAM  ratio {c.green(ratio)}")
+        if not m["zram"]:
+            row("zram", c.dim("not active"))
+
+    p = data["processes"]
+    if "processes" in p:
+        states = ", ".join(f"{v} {k}" for k, v in p["by_state"].items())
+        row("Processes", f"{p['processes']} processes, {p['threads']} threads", "processes")
+        out.append(f"  {' ' * 14} {states}")
+
+    s = data["scheduler"]
+    if "fair_class" in s:
+        row("Scheduler", s["fair_class"], "scheduler")
+        out.append(f"  {' ' * 14} autogroup {'on' if s['autogroup'] else 'off'}, "
+                   f"RT throttling {s['rt_runtime_us']} µs/s, "
+                   f"this process: {s['this_process_policy']} nice {s['this_process_nice']}")
+
+    r = data["rootfs"]
+    if "fstype" in r:
+        frac = r["used"] / r["size"] if r["size"] else 0
+        det = [r["fstype"]]
+        if r.get("subvolume"):
+            det.append(f"subvol {r['subvolume']}")
+        if r.get("compression"):
+            det.append(f"compress {r['compression']}")
+        row("Root FS", f"{bar(frac, c=c)} {human(r['used'])} / {human(r['size'])}  "
+                       f"({', '.join(det)})", "rootfs")
+        out.append(f"  {' ' * 14} {r['source']}")
+    out.append("")
+    return "\n".join(out)
+
+
+def render_short(data, c):
+    k, m, r, s = data["kernel"], data["memory"], data["rootfs"], data["scheduler"]
+    mem = f"{human(m.get('used', 0))}/{human(m.get('total', 0))}"
+    sched = s.get("fair_class", "?").split()[0]
+    return (f"{c.pink('▲ NeonArch')}  {k.get('release')}  ·  up {data['uptime'].get('text')}  ·  "
+            f"RAM {mem}  ·  {data['processes'].get('processes')} procs  ·  "
+            f"{sched}  ·  / {r.get('fstype')}")
+
+
+def main():
+    ap = argparse.ArgumentParser(description="NeonArch system report from /proc, /sys and syscalls.")
+    ap.add_argument("--short", action="store_true", help="one-line summary")
+    ap.add_argument("--json", action="store_true", help="JSON output")
+    ap.add_argument("--sources", action="store_true", help="show the kernel interface behind each value")
+    ap.add_argument("--no-color", action="store_true", help="disable ANSI colors")
+    args = ap.parse_args()
+
+    data, sources = collect()
+    if args.json:
+        json.dump({"collected_at": time.time(), "data": data, "sources": sources}, sys.stdout, indent=2)
+        print()
+        return
+    c = C(sys.stdout.isatty() and not args.no_color and "NO_COLOR" not in os.environ)
+    print(render_short(data, c) if args.short else render(data, sources, c, args.sources))
+
+
+if __name__ == "__main__":
+    main()

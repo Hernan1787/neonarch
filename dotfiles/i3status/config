@@ -1,0 +1,22 @@
+# NeonArch — i3status (top bar)
+general {
+    colors = true
+    color_good = "#39ff14"
+    color_degraded = "#ffe600"
+    color_bad = "#ff3864"
+    interval = 2
+}
+
+order += "cpu_usage"
+order += "load"
+order += "memory"
+order += "disk /"
+order += "ethernet _first_"
+order += "tztime local"
+
+cpu_usage   { format = "CPU %usage" }
+load        { format = "load %1min" }
+memory      { format = "RAM %used/%total" threshold_degraded = "20%" }
+disk "/"    { format = "SSD %avail" }
+ethernet _first_ { format_up = "net %ip" format_down = "net down" }
+tztime local { format = "%a %d %b  %H:%M" }
