@@ -3,6 +3,10 @@
 
 case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
 
+# Paste from the host (VirtualBox shared clipboard) into xterm: with bracketed-paste on,
+# xterm wraps the pasted text in ESC[200~ ... ESC[201~ and bash showed it literally.
+bind 'set enable-bracketed-paste off' 2>/dev/null
+
 HISTSIZE=10000
 HISTFILESIZE=20000
 HISTCONTROL=ignoreboth
