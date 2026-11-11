@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""
+neon-net — network interfaces at a glance (Layer 3 own command).
+
+For every interface: state, MAC, MTU, link speed (from /sys/class/net/<if>/),
+IPv4 address (ioctl SIOCGIFADDR on a socket) and live RX/TX rates computed
+from two samples of /proc/net/dev.
+
+    neon-net            one sample over 1 s
+    neon-net -w         refresh every second (Ctrl+C to quit)
+"""
+import fcntl
+import os
+import socket
+import struct
+import sys
+import time
+
+SYS = "/sys/class/net"
+
+
+def rd(path, default="?"):
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except OSError:
+        return default
+
+
+def counters():
+    out = {}
+    with open("/proc/net/dev") as f:
+        for line in f.readlines()[2:]:
+            name, data = line.split(":", 1)
+            v = data.split()
+            out[name.strip()] = (int(v[0]), int(v[8]))     # rx_bytes, tx_bytes
+    return out
+
+
+def ipv4(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        raw = fcntl.ioctl(s.fileno(), 0x8915, struct.pack("256s", ifname[:15].encode()))  # SIOCGIFADDR
+        return socket.inet_ntoa(raw[20:24])
+    except OSError:
+        return "-"
+    finally:
+        s.close()
+
+
+def human(bps):
+    for unit in ("B/s", "KiB/s", "MiB/s", "GiB/s"):
+        if bps < 1024 or unit == "GiB/s":
+            return f"{bps:7.1f} {unit}"
+        bps /= 1024
+
+
+def show():
+    a = counters(); t = time.monotonic(); time.sleep(1); b = counters(); dt = time.monotonic() - t
+    print(f"{'IFACE':<10} {'STATE':<8} {'IPv4':<16} {'MAC':<18} {'MTU':>5} {'SPEED':>9} {'RX':>13} {'TX':>13}")
+    for ifname in sorted(os.listdir(SYS)):
+        base = os.path.join(SYS, ifname)
+        speed = rd(f"{base}/speed", "-")
+        speed = f"{speed} Mb/s" if speed.lstrip("-").isdigit() and int(speed) > 0 else "-"
+        rx = (b[ifname][0] - a[ifname][0]) / dt if ifname in a and ifname in b else 0
+        tx = (b[ifname][1] - a[ifname][1]) / dt if ifname in a and ifname in b else 0
+        print(f"{ifname:<10} {rd(base + '/operstate'):<8} {ipv4(ifname):<16} {rd(base + '/address'):<18} "
+              f"{rd(base + '/mtu'):>5} {speed:>9} {human(rx):>13} {human(tx):>13}")
+
+
+def main():
+    if "-w" in sys.argv or "--watch" in sys.argv:
+        try:
+            while True:
+                print("\033[2J\033[H", end="")
+                show()
+        except KeyboardInterrupt:
+            pass
+    else:
+        show()
+
+
+if __name__ == "__main__":
+    main()

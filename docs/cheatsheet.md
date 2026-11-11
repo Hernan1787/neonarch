@@ -15,9 +15,9 @@
 
 | Shortcut | Action | Uses (OS interface / own command) | Designed by |
 |---|---|---|---|
-| | | | Hernán Alonso Gutiérrez Quesada |
-| | | | Hernán Alonso Gutiérrez Quesada |
-| | | | Hernán Alonso Gutiérrez Quesada |
+| `Super + I` | System stats HUD: `neon-info` in a floating terminal | `neon-info` (`/proc`, `/sys`, syscalls) | Hernán Alonso Gutiérrez Quesada |
+| `Super + B` | "Game mode" for the focused window: nice −5 for all its threads + highest I/O priority | `neon-boost --focused` (`xdotool` → PID, `setpriority(2)`, `ioprio_set(2)`; Topic 1) | Hernán Alonso Gutiérrez Quesada |
+| `Super + Shift + S` | Manual btrfs snapshot of `/` + notification with its number | `snapper -c root create` (Topic 3) | Hernán Alonso Gutiérrez Quesada |
 | | | | Royner Baltodano Sánchez |
 | | | | Royner Baltodano Sánchez |
 | | | | Royner Baltodano Sánchez |
