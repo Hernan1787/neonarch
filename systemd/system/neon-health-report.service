@@ -1,0 +1,13 @@
+# NeonArch — Topic 4: summary job started by neon-health-report.timer
+[Unit]
+Description=NeonArch health report (last 24 h)
+After=neon-health.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/neonarch/neon-health --report
+Environment=STATE_DIRECTORY=/var/lib/neon-health
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes

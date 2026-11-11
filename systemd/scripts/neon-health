@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""
+neon-health — NeonArch health sampler daemon (Topic 4, service management).
+
+Runs as the systemd service neon-health.service. Every NEON_HEALTH_INTERVAL
+seconds it appends one line to $STATE_DIRECTORY/health.csv with values read
+from /proc (load, available memory, number of processes, own RSS).
+
+Test hooks used by scripts/tema04-measure.sh to prove that the cgroup limits
+of the unit are enforced:
+    SIGUSR1  -> burn CPU for 30 s (single thread, CPU-bound)  -> CPUQuota=
+    SIGUSR2  -> allocate memory without limit                 -> MemoryMax= / OOM kill
+Modes:
+    neon-health            run the sampler daemon
+    neon-health --report   print a summary of the last 24 h (used by the timer)
+"""
+import os
+import signal
+import sys
+import time
+
+STATE_DIR = os.environ.get("STATE_DIRECTORY", "/var/lib/neon-health")
+CSV = os.path.join(STATE_DIR, "health.csv")
+INTERVAL = int(os.environ.get("NEON_HEALTH_INTERVAL", "10"))
+HEADER = "epoch,load1,mem_available_kib,processes,self_rss_kib\n"
+
+burn_until = 0.0
+hog_requested = False
+
+
+def log(msg):
+    # stdout of a service goes to the journal (journalctl -u neon-health)
+    print(msg, flush=True)
+
+
+def read(path):
+    with open(path) as f:
+        return f.read()
+
+
+def sample():
+    load1 = read("/proc/loadavg").split()[0]
+    mem = next(l for l in read("/proc/meminfo").splitlines() if l.startswith("MemAvailable:"))
+    avail = mem.split()[1]
+    procs = sum(1 for p in os.listdir("/proc") if p.isdigit())
+    rss = next(l for l in read("/proc/self/status").splitlines() if l.startswith("VmRSS:")).split()[1]
+    return f"{int(time.time())},{load1},{avail},{procs},{rss}\n"
+
+
+def on_usr1(signum, frame):
+    global burn_until
+    burn_until = time.time() + 30
+    log("SIGUSR1: burning CPU for 30 s (CPUQuota test)")
+
+
+def on_usr2(signum, frame):
+    global hog_requested
+    hog_requested = True
+    log("SIGUSR2: allocating memory until the cgroup limit is hit (MemoryMax test)")
+
+
+def on_term(signum, frame):
+    log("SIGTERM: clean shutdown")
+    sys.exit(0)
+
+
+def memory_hog():
+    blocks = []
+    chunk = 16 * 1024 * 1024
+    while True:
+        b = bytearray(chunk)
+        b[::4096] = b"\x01" * (chunk // 4096)   # touch every page so it is really resident
+        blocks.append(b)
+        log(f"allocated {len(blocks) * 16} MiB")
+        time.sleep(0.2)
+
+
+def daemon():
+    os.makedirs(STATE_DIR, exist_ok=True)
+    if not os.path.exists(CSV):
+        with open(CSV, "w") as f:
+            f.write(HEADER)
+    signal.signal(signal.SIGUSR1, on_usr1)
+    signal.signal(signal.SIGUSR2, on_usr2)
+    signal.signal(signal.SIGTERM, on_term)
+    log(f"neon-health started: pid={os.getpid()} uid={os.getuid()} interval={INTERVAL}s csv={CSV}")
+    next_sample = 0.0
+    while True:
+        now = time.time()
+        if hog_requested:
+            memory_hog()
+        if now >= next_sample:
+            with open(CSV, "a") as f:
+                f.write(sample())
+            next_sample = now + INTERVAL
+        if now < burn_until:
+            end = time.time() + 0.1
+            x = 0
+            while time.time() < end:      # pure CPU work, no syscalls that sleep
+                x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+        else:
+            time.sleep(0.5)
+
+
+def report():
+    try:
+        lines = read(CSV).splitlines()[1:]
+    except FileNotFoundError:
+        print("no data yet")
+        return
+    cutoff = time.time() - 86400
+    rows = [l.split(",") for l in lines if l and int(l.split(",")[0]) >= cutoff]
+    if not rows:
+        print("no samples in the last 24 h")
+        return
+    loads = [float(r[1]) for r in rows]
+    avail = [int(r[2]) for r in rows]
+    print(f"neon-health report: {len(rows)} samples in the last 24 h")
+    print(f"  load1   min {min(loads):.2f}  avg {sum(loads)/len(loads):.2f}  max {max(loads):.2f}")
+    print(f"  MemAvailable  min {min(avail)//1024} MiB  avg {sum(avail)//len(avail)//1024} MiB")
+
+
+if __name__ == "__main__":
+    report() if "--report" in sys.argv else daemon()

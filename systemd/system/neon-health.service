@@ -1,0 +1,32 @@
+# NeonArch — Topic 4 (service management)
+# Long-running sampler confined to its own cgroup with CPU and memory limits.
+[Unit]
+Description=NeonArch health sampler (Topic 4)
+Documentation=https://github.com/Hernan1787/neonarch/blob/main/docs/tema-04-servicios.md
+After=local-fs.target
+Wants=neon-health-report.timer
+# Do not restart forever if it keeps crashing: at most 5 restarts in 60 s
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/lib/neonarch/neon-health
+Environment=NEON_HEALTH_INTERVAL=10
+# Restart policy: restart if it dies abnormally (crash, kill, OOM), not on a clean stop
+Restart=on-failure
+RestartSec=3
+# Resource limits, enforced by the kernel through cgroups v2
+CPUQuota=20%
+MemoryMax=64M
+MemorySwapMax=0
+# Least privilege: ephemeral unprivileged user, read-only OS, no access to /home
+DynamicUser=yes
+StateDirectory=neon-health
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

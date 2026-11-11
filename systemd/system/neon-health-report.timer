@@ -1,0 +1,11 @@
+# NeonArch — Topic 4: run the report 2 min after boot and then every hour
+[Unit]
+Description=Hourly NeonArch health report
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target
