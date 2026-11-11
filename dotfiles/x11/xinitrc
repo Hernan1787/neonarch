@@ -17,7 +17,10 @@ setxkbmap us 2>/dev/null           # keyboard layout (we use US; change to "lata
 command -v VBoxClient-all >/dev/null && VBoxClient-all &
 command -v spice-vdagent  >/dev/null && spice-vdagent &
 
-case "${NEON_SESSION:-i3}" in
+# The session can also be chosen with a file (used to measure i3 vs XFCE under identical
+# conditions: same tty1 login, same autostart):  echo xfce > ~/.config/neonarch/session
+SESSION=${NEON_SESSION:-$(cat "$HOME/.config/neonarch/session" 2>/dev/null)}
+case "${SESSION:-i3}" in
     xfce) exec startxfce4 ;;
     *)    exec i3 ;;
 esac

@@ -2,10 +2,12 @@
 # Layer 1 — "DE/WM justified with data" (assignment A.3).
 # Measures idle memory and number of processes of the current graphical session.
 #
-# Procedure (repeat for each environment, right after logging in, nothing else open
-# except ONE terminal running this script):
-#   1. startx                       -> i3     -> ./scripts/measure-desktop.sh i3
-#   2. NEON_SESSION=xfce startx  -> XFCE   -> ./scripts/measure-desktop.sh xfce
+# Procedure (repeat for each environment, right after logging in on tty1, nothing else
+# open except ONE xterm running this script):
+#   1. reboot, log in (i3 starts)                -> ./scripts/measure-desktop.sh i3
+#   2. sudo pacman -S xfce4; echo xfce > ~/.config/neonarch/session; reboot, log in (XFCE)
+#      Alt+F2 -> xterm                           -> ./scripts/measure-desktop.sh xfce
+#   3. rm ~/.config/neonarch/session; sudo pacman -Rns xfce4
 # Results are appended to docs/evidence/desktop/measurements.csv
 set -euo pipefail
 
