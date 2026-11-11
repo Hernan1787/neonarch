@@ -3,3 +3,10 @@ __pycache__/
 *.pkg.tar.zst
 pacman/pkgbuild/*/src/
 pacman/pkgbuild/*/pkg/
+docs/report/*.aux
+docs/report/*.log
+docs/report/*.out
+docs/report/*.toc
+docs/report/*.fls
+docs/report/*.fdb_latexmk
+docs/report/main.pdf

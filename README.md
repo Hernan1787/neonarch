@@ -1,12 +1,14 @@
 # ▲ NeonArch
 
 **A gamer-flavoured custom Linux distribution built on Arch Linux: neon looks, measured internals.**
-II Programmed Project · IC-6600 Principles of Operating Systems · TEC, San Carlos campus · II Semester 2026
+II Programmed Project · IC-6600 Principles of Operating Systems · Instituto Tecnológico de Costa Rica · II Semester 2026
 Alternative A (academic track).
 
 Team: **Hernán Alonso Gutiérrez Quesada** · **Royner Baltodano Sánchez**
 
-<!-- TODO: add screenshots: docs/img/desktop.png (i3 + neon-info) and docs/img/boot.png -->
+![NeonArch desktop: i3 with the neon bar and neon-info, the system report read from /proc, /sys and syscalls](docs/img/desktop.png)
+
+📄 **Final report:** [`docs/report/NeonArch_Final_Report.pdf`](docs/report/NeonArch_Final_Report.pdf) · ⌨️ **Shortcuts:** [`docs/cheatsheet.md`](docs/cheatsheet.md)
 
 ---
 
@@ -94,9 +96,11 @@ neonarch/
 
 | Item | Status |
 |---|---|
-| H1 — manual install (both members), DE/WM, repo, matrix | 🟡 in progress |
-| H2 — 4 topics with evidence, bootstrap working | ⬜ |
-| H3 — 7 topics, Layer 3, reproducibility, report, defence | ⬜ |
+| Layer 1: manual install, bootstrap, DE/WM justified | ✅ Hernán · ⏳ Royner's install |
+| Topics 1, 3, 4, 6, 7 (Hernán): implemented, measured, evidence sheets | ✅ |
+| Topics 2, 9 (Royner) | ⏳ scripts ready, measurements pending |
+| Layer 3: `neon-info` + own commands + shortcuts | ✅ Hernán (3 commands, 3 shortcuts) · ⏳ Royner |
+| Final report | 🟡 draft: Topics 2 and 9 pending |
 
 ## Sources and credits
 - [Arch Wiki — Installation guide](https://wiki.archlinux.org/title/Installation_guide), [btrfs](https://wiki.archlinux.org/title/Btrfs), [systemd-boot](https://wiki.archlinux.org/title/Systemd-boot), [i3](https://wiki.archlinux.org/title/I3)
