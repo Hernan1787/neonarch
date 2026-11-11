@@ -91,6 +91,18 @@
 | Validated / corrected / discarded | **Corrected.** The first run gave ext4 5785 MiB/s sequential read and 217 914 random-read IOPS (71 µs): impossible for the virtual disk, which gave btrfs 1826 MiB/s and 26 683 IOPS. `O_DIRECT` only bypassed ext4's cache; the loop driver still read the image through the page cache, so ext4 was measuring **RAM**. Fixed by creating the loop device with `losetup --direct-io=on`. The biased JSONs are kept in `docs/evidence/tema-03/fio/discarded-buffered-loop/` as evidence of the problem. |
 | How it was validated | Sanity check of the numbers against the hardware (RAM-speed results on a disk benchmark), `losetup -l` showing `DIO 1` in the re-run (`setup-ext4.txt`). |
 
+### Entry 8 — ⚠️ AI error #5
+| Field | Content |
+|---|---|
+| Date · member | 2026-11-11 · Hernán Alonso Gutiérrez Quesada |
+| Tool | Claude (Anthropic) |
+| Component | Topic 3 (`scripts/tema03-rollback-demo.sh`) |
+| Purpose | Live demo: remove a package, then roll the files back from the snap-pac snapshot |
+| Summarised query | Part of entry 6. |
+| Result obtained | Step 3 ("htop no longer exists") printed `/usr/bin/htop` for `command -v htop`, although `snapper status 20..21` showed the file as deleted (`-..... /usr/bin/htop`). |
+| Validated / corrected / discarded | **Corrected.** bash keeps a hash table of the paths of commands it has already executed (htop ran in step 1), and `command -v` answers from it without checking the file. The demo was technically right but would have shown the opposite of the truth during the defence. Fixed with `hash -r` before each command, plus `ls -l /usr/bin/htop` as direct proof and `pacman -Qkk htop` after the rollback. |
+| How it was validated | Comparing the step 3 output with `snapper status` of the same transaction; re-running the demo. |
+
 ---
 
 ## Components built without AI

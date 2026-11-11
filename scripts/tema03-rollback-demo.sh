@@ -14,7 +14,10 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$REPO_DIR/docs/evidence/tema-03"; mkdir -p "$OUT"
 exec > >(tee "$OUT/rollback-demo.txt") 2>&1
 pause() { echo; read -rp "   [Enter] para continuar..." _ </dev/tty; }
-run()   { printf '\n\e[1;35m$ %s\e[0m\n' "$*"; eval "$*"; }
+# hash -r: bash caches the path of commands it already ran, and "command -v" answers from
+# that cache even after the file is deleted (first version of this demo showed /usr/bin/htop
+# after the removal). Clearing the cache before every command makes the output truthful.
+run()   { hash -r; printf '\n\e[1;35m$ %s\e[0m\n' "$*"; eval "$*"; }
 
 sudo -v
 echo "=== 1. Estado inicial ==="
@@ -27,6 +30,7 @@ run "sudo snapper -c root list | tail -n 3"
 pause
 echo "=== 3. htop ya no existe ==="
 run "pacman -Q htop"
+run "ls -l /usr/bin/htop"
 run "command -v htop || echo 'htop: not found'"
 pause
 POST=$(sudo snapper --csvout -c root list --columns number,type | awk -F, '$2=="post"{n=$1} END{print n}')
@@ -37,5 +41,7 @@ run "sudo snapper -c root undochange $PRE..$POST"
 pause
 echo "=== 5. Verificación ==="
 run "pacman -Q htop"
+run "ls -l /usr/bin/htop"
 run "command -v htop && htop --version"
+run "pacman -Qkk htop      # files match pacman's database again"
 echo; echo "Demo guardada en docs/evidence/tema-03/rollback-demo.txt"
