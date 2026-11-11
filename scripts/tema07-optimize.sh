@@ -13,7 +13,7 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$REPO_DIR/docs/evidence/tema-07"; mkdir -p "$OUT"
 sudo -v
-sudo ls -l /boot/initramfs-linux.img | tee "$OUT/initramfs-before.txt"
+sudo ls -l /boot/initramfs-linux.img | tee "$OUT/initramfs-before-${1:-lz4}.txt"
 
 if sudo grep -q '^timeout[[:space:]]\+1$' /boot/loader/loader.conf; then
     echo "[ok]      loader timeout already 1 s"
@@ -24,18 +24,29 @@ fi
 
 pacman -Q lz4 >/dev/null 2>&1 || sudo pacman -S --needed --noconfirm lz4
 CONF=/etc/mkinitcpio.conf.d/10-neonarch.conf
-WANT='# NeonArch Topic 7: faster initramfs (lz4 decompresses faster; no fsck hook on btrfs)
+# Variants (first argument):
+#   lz4   (attempt 1) COMPRESSION=lz4, no fsck hook   -> result: SLOWER (bigger image to read)
+#   slim  (attempt 2) COMPRESSION=zstd, no fsck and no kms hook -> smaller image
+VARIANT=${1:-lz4}
+case $VARIANT in
+  lz4)  WANT='# NeonArch Topic 7, attempt 1: lz4 decompresses faster; no fsck hook on btrfs
 COMPRESSION="lz4"
-HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block filesystems)'
+HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block filesystems)' ;;
+  slim) WANT='# NeonArch Topic 7, attempt 2: smaller initramfs. zstd (default); no fsck (btrfs) and
+# no kms (the GPU driver is not needed to mount the root; udev loads vmwgfx later)
+COMPRESSION="zstd"
+HOOKS=(base systemd autodetect microcode modconf keyboard sd-vconsole block filesystems)' ;;
+  *) echo "usage: $0 [lz4|slim]"; exit 1 ;;
+esac
 if [[ "$(cat "$CONF" 2>/dev/null)" == "$WANT" ]]; then
-    echo "[ok]      initramfs already lz4 without fsck"
+    echo "[ok]      initramfs already '$VARIANT'"
 else
     grep -E '^HOOKS=' /etc/mkinitcpio.conf | tee "$OUT/hooks-before.txt"
     sudo mkdir -p /etc/mkinitcpio.conf.d
     printf '%s\n' "$WANT" | sudo tee "$CONF" >/dev/null
-    sudo mkinitcpio -P 2>&1 | tee "$OUT/mkinitcpio-after.txt"
-    echo "[changed] initramfs rebuilt: lz4, no fsck hook"
+    sudo mkinitcpio -P 2>&1 | tee "$OUT/mkinitcpio-$VARIANT.txt"
+    echo "[changed] initramfs rebuilt: variant '$VARIANT'"
 fi
-sudo ls -l /boot/initramfs-linux.img | tee "$OUT/initramfs-after.txt"
-sudo cat /boot/loader/loader.conf "$CONF" | tee "$OUT/optimisation-config.txt"
-echo "Now reboot 3 times and run ./scripts/tema07-boot-measure.py after after each boot."
+sudo ls -l /boot/initramfs-linux.img | tee "$OUT/initramfs-$VARIANT.txt"
+sudo cat /boot/loader/loader.conf "$CONF" | tee "$OUT/optimisation-config-$VARIANT.txt"
+echo "Now reboot 3 times and run ./scripts/tema07-boot-measure.py $VARIANT after each boot."
