@@ -1,0 +1,15 @@
+$ systemctl status neon-health.service --no-pager
+● neon-health.service - NeonArch health sampler (Topic 4)
+     Loaded: loaded (/etc/systemd/system/neon-health.service; enabled; preset: disabled)
+     Active: active (running) since Tue 2026-11-10 23:18:37 CST; 57s ago
+ Invocation: 9064e4cd7b9742febd82d77f82c7d76b
+       Docs: https://github.com/Hernan1787/neonarch/blob/main/docs/tema-04-servicios.md
+   Main PID: 331 (python3)
+      Tasks: 1 (limit: 4639)
+     Memory: 10.6M (max: 64M, swap max: 0B, available: 53.3M, peak: 12.3M)
+        CPU: 32ms
+     CGroup: /system.slice/neon-health.service
+             └─331 /usr/bin/python3 /usr/local/lib/neonarch/neon-health
+
+Nov 10 23:18:37 neonarch-hernan systemd[1]: Started NeonArch health sampler (Topic 4).
+Nov 10 23:18:37 neonarch-hernan python3[331]: neon-health started: pid=331 uid=61444 interval=10s csv=/var/lib/neon-health/health.csv

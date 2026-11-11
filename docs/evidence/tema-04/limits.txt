@@ -1,0 +1,10 @@
+$ systemctl show neon-health.service -p ControlGroup -p CPUQuotaPerSecUSec -p MemoryMax -p MemorySwapMax -p Restart -p RestartUSec -p User -p DynamicUser -p NRestarts
+Restart=on-failure
+RestartUSec=3s
+NRestarts=0
+ControlGroup=/system.slice/neon-health.service
+CPUQuotaPerSecUSec=200ms
+MemoryMax=67108864
+MemorySwapMax=0
+User=neon-health
+DynamicUser=yes

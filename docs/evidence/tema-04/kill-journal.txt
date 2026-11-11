@@ -1,0 +1,15 @@
+$ journalctl -u neon-health.service --since 2026-11-10 23:20:43 --no-pager -o short-precise
+Nov 10 23:24:16.491791 neonarch-hernan systemd[1]: Stopping NeonArch health sampler (Topic 4)...
+Nov 10 23:24:16.494670 neonarch-hernan python3[4869]: SIGTERM: clean shutdown
+Nov 10 23:24:16.497341 neonarch-hernan systemd[1]: neon-health.service: Deactivated successfully.
+Nov 10 23:24:16.497546 neonarch-hernan systemd[1]: Stopped NeonArch health sampler (Topic 4).
+-- Boot 46fa0f2983ce490ea60d3f4d45aaf960 --
+Nov 10 23:20:43.006601 neonarch-hernan systemd[1]: neon-health.service: Scheduled restart job, restart counter is at 1.
+Nov 10 23:20:43.007785 neonarch-hernan systemd[1]: Started NeonArch health sampler (Topic 4).
+Nov 10 23:20:43.077613 neonarch-hernan systemd[1]: neon-health.service: Sent signal SIGKILL to main process 1106 (python3) on client request.
+Nov 10 23:20:43.077706 neonarch-hernan systemd[1]: neon-health.service: Killed unit cgroup '/system.slice/neon-health.service' with SIGKILL on client request.
+Nov 10 23:20:43.079376 neonarch-hernan systemd[1]: neon-health.service: Main process exited, code=killed, status=9/KILL
+Nov 10 23:20:43.079474 neonarch-hernan systemd[1]: neon-health.service: Failed with result 'signal'.
+Nov 10 23:20:46.104442 neonarch-hernan systemd[1]: neon-health.service: Scheduled restart job, restart counter is at 2.
+Nov 10 23:20:46.105601 neonarch-hernan systemd[1]: Started NeonArch health sampler (Topic 4).
+Nov 10 23:20:46.147196 neonarch-hernan python3[1132]: neon-health started: pid=1132 uid=61444 interval=10s csv=/var/lib/neon-health/health.csv

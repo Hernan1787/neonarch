@@ -1,0 +1,3 @@
+/ btrfs rw,noatime,compress=zstd:1,space_cache=v2,subvolid=256,subvol=/@
+/mnt/fio-ext4 ext4 rw,relatime
+---------------C------ /var/tmp/fio-ext4.img

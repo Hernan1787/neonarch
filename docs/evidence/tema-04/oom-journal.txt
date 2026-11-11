@@ -1,0 +1,17 @@
+$ journalctl -u neon-health.service --since 2026-11-10 23:20:38 --no-pager -o short-precise
+Nov 10 23:24:16.491791 neonarch-hernan systemd[1]: Stopping NeonArch health sampler (Topic 4)...
+Nov 10 23:24:16.494670 neonarch-hernan python3[4869]: SIGTERM: clean shutdown
+Nov 10 23:24:16.497341 neonarch-hernan systemd[1]: neon-health.service: Deactivated successfully.
+Nov 10 23:24:16.497546 neonarch-hernan systemd[1]: Stopped NeonArch health sampler (Topic 4).
+-- Boot 46fa0f2983ce490ea60d3f4d45aaf960 --
+Nov 10 23:20:38.920755 neonarch-hernan systemd[1]: neon-health.service: Sent signal SIGUSR2 to main process 331 (python3) on client request.
+Nov 10 23:20:38.921100 neonarch-hernan python3[331]: SIGUSR2: allocating memory until the cgroup limit is hit (MemoryMax test)
+Nov 10 23:20:39.182643 neonarch-hernan python3[331]: allocated 16 MiB
+Nov 10 23:20:39.402092 neonarch-hernan python3[331]: allocated 32 MiB
+Nov 10 23:20:39.635305 neonarch-hernan python3[331]: allocated 48 MiB
+Nov 10 23:20:39.847191 neonarch-hernan systemd[1]: neon-health.service: The kernel OOM killer killed some processes in this unit.
+Nov 10 23:20:39.847799 neonarch-hernan systemd[1]: neon-health.service: Main process exited, code=killed, status=9/KILL
+Nov 10 23:20:39.847858 neonarch-hernan systemd[1]: neon-health.service: Failed with result 'oom-kill'.
+Nov 10 23:20:39.848112 neonarch-hernan systemd[1]: neon-health.service: Consumed 35.562s CPU time over 2min 2.539s wall clock time, 64M memory peak.
+Nov 10 23:20:43.006601 neonarch-hernan systemd[1]: neon-health.service: Scheduled restart job, restart counter is at 1.
+Nov 10 23:20:43.007785 neonarch-hernan systemd[1]: Started NeonArch health sampler (Topic 4).

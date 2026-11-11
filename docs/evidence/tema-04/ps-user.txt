@@ -1,0 +1,3 @@
+$ ps -o user,pid,ppid,rss,cmd -C python3
+USER         PID    PPID   RSS CMD
+neon-he+     331       1 11840 /usr/bin/python3 /usr/local/lib/neonarch/neon-health

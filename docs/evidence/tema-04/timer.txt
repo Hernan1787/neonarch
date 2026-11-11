@@ -1,0 +1,6 @@
+$ systemctl list-timers neon-health-report.timer --no-pager
+NEXT                        LEFT LAST PASSED UNIT                     ACTIVATES
+Tue 2026-11-10 23:20:33 CST  57s -         - neon-health-report.timer neon-health-report.service
+
+1 timers listed.
+Pass --all to see loaded but inactive timers, too.

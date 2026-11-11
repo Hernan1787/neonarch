@@ -1,0 +1,2 @@
+$ systemctl show neon-health.service -p CPUQuotaPerSecUSec
+CPUQuotaPerSecUSec=200ms
