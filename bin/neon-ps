@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+"""
+neon-ps — NeonArch process tool (Topic 1, processes and scheduling).
+
+Lists processes with PID, PPID, state, nice, scheduling policy, RT priority and
+CPU usage, and changes the priority / policy of a process. Everything is read
+from /proc/[pid]/stat and /proc/[pid]/status, or done with system calls:
+    getpriority(2) / setpriority(2)          -> nice
+    sched_getscheduler(2) / sched_setscheduler(2) -> policy (OTHER, BATCH, IDLE, FIFO, RR)
+    sched_getparam(2)                         -> real-time priority
+    sched_getaffinity(2) / sched_setaffinity(2)   -> CPUs the process may run on
+
+    neon-ps                       top 20 processes by CPU (sampled for 1 s)
+    neon-ps -n 50 -u hernan       top 50 of a user
+    neon-ps -p 1234               one process, with its affinity
+    neon-ps nice 1234 10          set nice value (negative needs sudo)
+    neon-ps policy 1234 fifo 10   set SCHED_FIFO priority 10 (needs sudo)
+    neon-ps policy 1234 other     back to the normal (fair) class
+    neon-ps pin 1234 0            pin the process to CPU 0
+"""
+import argparse
+import os
+import pwd
+import signal
+import sys
+import time
+
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+POLICIES = {"other": os.SCHED_OTHER, "fifo": os.SCHED_FIFO, "rr": os.SCHED_RR,
+            "batch": os.SCHED_BATCH, "idle": os.SCHED_IDLE}
+POLICY_NAMES = {v: k.upper() for k, v in POLICIES.items()}
+CLK_TCK = os.sysconf("SC_CLK_TCK")      # kernel clock ticks per second (usually 100)
+STATES = {"R": "running", "S": "sleeping", "D": "disk-wait", "Z": "zombie", "T": "stopped",
+          "t": "traced", "I": "idle", "X": "dead"}
+
+
+def read_stat(pid):
+    """Fields of /proc/<pid>/stat. comm may contain spaces, so split after the last ')'."""
+    with open(f"/proc/{pid}/stat") as f:
+        s = f.read()
+    comm = s[s.index("(") + 1:s.rindex(")")]
+    rest = s[s.rindex(")") + 2:].split()
+    # rest[0]=state(3) rest[1]=ppid(4) rest[11]=utime(14) rest[12]=stime(15)
+    # rest[15]=priority(18) rest[16]=nice(19) rest[36]=processor(39) rest[38]=policy(41)
+    return {
+        "comm": comm, "state": rest[0], "ppid": int(rest[1]),
+        "ticks": int(rest[11]) + int(rest[12]), "nice": int(rest[16]),
+        "cpu": int(rest[36]), "policy": int(rest[38]), "rt_prio": int(rest[37]),
+    }
+
+
+def owner(pid):
+    try:
+        return pwd.getpwuid(os.stat(f"/proc/{pid}").st_uid).pw_name
+    except (KeyError, FileNotFoundError):
+        return "?"
+
+
+def pids():
+    return [int(p) for p in os.listdir("/proc") if p.isdigit()]
+
+
+def snapshot():
+    out = {}
+    for pid in pids():
+        try:
+            out[pid] = read_stat(pid)
+        except (FileNotFoundError, ProcessLookupError, ValueError):
+            pass
+    return out
+
+
+def list_processes(args):
+    a = snapshot()
+    t0 = time.monotonic()
+    time.sleep(args.interval)
+    b = snapshot()
+    dt = time.monotonic() - t0
+    rows = []
+    for pid, s in b.items():
+        if args.user and owner(pid) != args.user:
+            continue
+        if args.pid and pid != args.pid:
+            continue
+        used = s["ticks"] - a.get(pid, s)["ticks"]
+        cpu_pct = 100.0 * used / CLK_TCK / dt
+        rows.append((cpu_pct, pid, s))
+    rows.sort(key=lambda r: r[0], reverse=True)
+    print(f"{'PID':>7} {'PPID':>7} {'USER':<10} {'ST':<2} {'NI':>3} {'POLICY':<6} {'RTP':>3} "
+          f"{'CPU#':>4} {'%CPU':>6}  COMMAND")
+    for cpu_pct, pid, s in rows[:args.n]:
+        print(f"{pid:>7} {s['ppid']:>7} {owner(pid)[:10]:<10} {s['state']:<2} {s['nice']:>3} "
+              f"{POLICY_NAMES.get(s['policy'], s['policy']):<6} {s['rt_prio']:>3} {s['cpu']:>4} "
+              f"{cpu_pct:>6.1f}  {s['comm']}")
+    if args.pid:
+        print(f"\naffinity (sched_getaffinity): CPUs {sorted(os.sched_getaffinity(args.pid))}")
+        print(f"state: {STATES.get(b[args.pid]['state'], '?')}")
+
+
+def main():
+    ap = argparse.ArgumentParser(description="List and tune processes (/proc + scheduling syscalls).")
+    sub = ap.add_subparsers(dest="cmd")
+    ap.add_argument("-n", type=int, default=20, help="number of rows (default 20)")
+    ap.add_argument("-u", "--user", help="only processes of this user")
+    ap.add_argument("-p", "--pid", type=int, help="only this PID (also shows affinity)")
+    ap.add_argument("-i", "--interval", type=float, default=1.0, help="CPU sampling interval in s")
+    s1 = sub.add_parser("nice", help="set the nice value: nice PID VALUE (-20..19)")
+    s1.add_argument("pid", type=int); s1.add_argument("value", type=int)
+    s2 = sub.add_parser("policy", help="set policy: policy PID other|batch|idle|fifo|rr [PRIO]")
+    s2.add_argument("pid", type=int); s2.add_argument("policy", choices=POLICIES)
+    s2.add_argument("prio", type=int, nargs="?", default=0)
+    s3 = sub.add_parser("pin", help="restrict to CPUs: pin PID CPU[,CPU...]")
+    s3.add_argument("pid", type=int); s3.add_argument("cpus")
+    args = ap.parse_args()
+
+    try:
+        if args.cmd == "nice":
+            before = os.getpriority(os.PRIO_PROCESS, args.pid)
+            os.setpriority(os.PRIO_PROCESS, args.pid, args.value)
+            print(f"PID {args.pid}: nice {before} -> {os.getpriority(os.PRIO_PROCESS, args.pid)}")
+        elif args.cmd == "policy":
+            pol = POLICIES[args.policy]
+            prio = args.prio if pol in (os.SCHED_FIFO, os.SCHED_RR) else 0
+            os.sched_setscheduler(args.pid, pol, os.sched_param(prio))
+            got = os.sched_getscheduler(args.pid)
+            print(f"PID {args.pid}: policy {POLICY_NAMES[got]} rt_priority {os.sched_getparam(args.pid).sched_priority}")
+        elif args.cmd == "pin":
+            cpus = {int(c) for c in args.cpus.split(",")}
+            os.sched_setaffinity(args.pid, cpus)
+            print(f"PID {args.pid}: affinity {sorted(os.sched_getaffinity(args.pid))}")
+        else:
+            list_processes(args)
+    except PermissionError:
+        sys.exit("permission denied: negative nice values and real-time policies need root (use sudo)")
+    except ProcessLookupError:
+        sys.exit("no such process")
+
+
+if __name__ == "__main__":
+    main()

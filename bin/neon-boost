@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""
+neon-boost — "game mode" for one process (Layer 3 own command, linked to Topic 1).
+
+Raises the CPU and I/O priority of a process and ALL its threads:
+  * nice -> -5 for every thread in /proc/<pid>/task  (setpriority(2) works per
+    thread on Linux, so boosting only the PID would leave the other threads behind)
+  * I/O class best-effort, level 0 (highest)          (ioprio_set(2) via ctypes)
+  --undo puts everything back to nice 0 / best-effort level 4.
+
+    sudo neon-boost 1234          boost PID 1234
+    sudo neon-boost firefox       boost every process whose name is "firefox"
+    sudo neon-boost --undo 1234
+    neon-boost --focused          (as the user, from the Super+B shortcut) boost the
+                                  focused window: gets its PID with xdotool, calls
+                                  "sudo -n /usr/bin/neon-boost PID" and shows a notification
+"""
+import ctypes
+import os
+import shutil
+import subprocess
+import sys
+
+BOOST_NICE, NORMAL_NICE = -5, 0
+SYS_IOPRIO_SET = 251                      # x86_64 syscall number
+IOPRIO_WHO_PROCESS, IOPRIO_CLASS_BE, IOPRIO_SHIFT = 1, 2, 13
+libc = ctypes.CDLL(None, use_errno=True)
+
+
+def comm(pid):
+    with open(f"/proc/{pid}/comm") as f:
+        return f.read().strip()
+
+
+def resolve(target):
+    if target.isdigit():
+        return [int(target)]
+    pids = [int(p) for p in os.listdir("/proc") if p.isdigit() and _safe_comm(p) == target]
+    if not pids:
+        sys.exit(f"no process named '{target}'")
+    return pids
+
+
+def _safe_comm(p):
+    try:
+        return comm(p)
+    except OSError:
+        return None
+
+
+def ioprio(tid, level):
+    value = (IOPRIO_CLASS_BE << IOPRIO_SHIFT) | level
+    if libc.syscall(SYS_IOPRIO_SET, IOPRIO_WHO_PROCESS, tid, value) != 0:
+        raise OSError(ctypes.get_errno(), os.strerror(ctypes.get_errno()))
+
+
+def apply(pid, undo):
+    nice = NORMAL_NICE if undo else BOOST_NICE
+    level = 4 if undo else 0
+    tids = [int(t) for t in os.listdir(f"/proc/{pid}/task")]
+    before = os.getpriority(os.PRIO_PROCESS, pid)
+    for tid in tids:
+        os.setpriority(os.PRIO_PROCESS, tid, nice)
+        ioprio(tid, level)
+    return f"{comm(pid)} (PID {pid}, {len(tids)} threads): nice {before} -> {nice}, io best-effort/{level}"
+
+
+def focused():
+    if not shutil.which("xdotool"):
+        sys.exit("xdotool is not installed")
+    pid = subprocess.run(["xdotool", "getactivewindow", "getwindowpid"],
+                         capture_output=True, text=True).stdout.strip()
+    if not pid.isdigit():
+        msg = "the focused window does not report a PID"
+    else:
+        r = subprocess.run(["sudo", "-n", "/usr/bin/neon-boost", pid], capture_output=True, text=True)
+        msg = (r.stdout or r.stderr).strip()
+    print(msg)
+    if shutil.which("notify-send"):
+        subprocess.run(["notify-send", "-a", "NeonArch", "neon-boost", msg])
+
+
+def main():
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help"):
+        print(__doc__); return
+    if args[0] == "--focused":
+        focused(); return
+    undo = args[0] == "--undo"
+    if undo:
+        args = args[1:]
+    if os.geteuid() != 0:
+        sys.exit("neon-boost needs root to lower the nice value: run it with sudo")
+    for pid in resolve(args[0]):
+        try:
+            print(apply(pid, undo))
+        except (ProcessLookupError, FileNotFoundError):
+            print(f"PID {pid} exited")
+
+
+if __name__ == "__main__":
+    main()

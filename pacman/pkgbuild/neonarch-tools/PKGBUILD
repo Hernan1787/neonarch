@@ -5,7 +5,7 @@
 # Build & install:  cd pacman/pkgbuild/neonarch-tools && makepkg -f && sudo pacman -U ./*.pkg.tar.zst
 pkgname=neonarch-tools
 pkgver=1.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc="NeonArch own commands: neon-info, neon-ps, neon-boost, neon-net, neon-mem (read /proc, /sys and use syscalls)"
 arch=('any')
 url="https://github.com/Hernan1787/neonarch"

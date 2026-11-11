@@ -13,7 +13,9 @@ XTerm*internalBorder:    10
 XTerm*scrollBar:         false
 XTerm*saveLines:         10000
 XTerm*metaSendsEscape:   true
-XTerm*selectToClipboard: true
+XTerm*selectToClipboard: false
+! (false: selecting text with the mouse must NOT overwrite the clipboard — a later
+!  Ctrl+Shift+V would paste terminal OUTPUT into bash; lines with ">" truncated files)
 XTerm*cursorBlink:       true
 XTerm*pointerShape:      left_ptr
 

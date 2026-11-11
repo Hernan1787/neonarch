@@ -306,7 +306,8 @@ Then run the bootstrap (installs i3, our dotfiles, commands and services):
 | 11 | Hernán | 14 | Boot entry ended in `rm` instead of `rw` | Typo in the kernel parameter (root would stay read-only) | `sed -i 's/ rm$/ rw/'` and verified with `cat` |
 | 12 | Hernán | 16 | i3 showed *"You have an error in your i3 config file!"*, no shortcut worked | Comments at the end of config lines (`set $mod Mod4  # Super`) — i3 only allows comments on their own line | Moved the comments (`sed`), validated with `i3 -C -c ~/.config/i3/config` |
 | 13 | Hernán | 16 | `Super+Enter` opened nothing; `pgrep -a alacritty` listed 21 hung processes and RAM grew from 178 MiB to 1.6 GiB; later the whole X display stayed black | Alacritty renders with OpenGL; the VirtualBox VMSVGA adapter has no 3D acceleration and the GL initialisation hung (also with `LIBGL_ALWAYS_SOFTWARE=1`) | Diagnosed from tty2 (`showkey -k` proved the Super key arrived: keycode 125). Replaced the terminal with **xterm** (CPU-rendered via X11) and rebooted |
-| 14 | | | | | |
+| 14 | Hernán | after install | `bin/neon-ps`, `neon-boost`, `neon-net`, `neon-mem` became **empty** and files named `Building`, `Running`, `Summary`, `-k`… appeared in the repo | Terminal **output** (selected with the mouse, which xterm copied to the clipboard) was pasted into bash; with bracketed paste off each line ran as a command, and lines such as `==> Building image` or `[changed] … -> bin/neon-ps` contain `>`, a redirection that creates/truncates the file | Restored the files from Git history (`git checkout <commit> -- bin/…`), deleted the junk files, set `XTerm*selectToClipboard: false` and rebuilt the package (`pkgrel=2`) |
+| 15 | | | | | |
 
 ### Known pitfalls (check these first)
 
