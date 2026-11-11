@@ -37,9 +37,24 @@ Only one terminal is open. Raw data: `docs/evidence/desktop/measurements.csv`.
 
 Means of 5 samples (10 s apart, after 60 s idle) on `neonarch-hernan` (4 GiB VM, kernel 7.2.15), 2026-11-11. The samples within each session varied by less than 15 MiB. Raw data: `docs/evidence/desktop/measurements.csv`; process lists: `processes-{i3,xfce}-neonarch-hernan.txt`; `free -m`: `free-*.txt`.
 
+### Where the memory goes (RSS per process, from `processes-*.txt`)
+| Process | i3 session | XFCE session |
+|---|---|---|
+| X server (`Xorg`) | 82 MB | 92 MB |
+| Window manager | `i3` 44 MB | `xfwm4` 46 MB |
+| Session manager | — | `xfce4-session` 61 MB |
+| Desktop / wallpaper / icons | `xsetroot` (exits) | `xfdesktop` 57 MB |
+| Settings daemons | — | `xfsettingsd` 52 MB, `dconf-service` 6 MB |
+| Panel / bar | `i3bar` 17 MB + `i3status` 6 MB | `xfce4-panel` 46 MB + 2 plugin wrappers 67 MB |
+| File manager daemon | — | `Thunar --daemon` 30 MB |
+| Power manager, polkit agent, accessibility bus | — | 29 + 28 + 16 MB |
+| Notifications | `dunst` 12 MB | `dunst` 12 MB |
+| **Measurement artefacts** | — | `xfce4-appfinder` 42 MB (Alt+F2 launcher, stayed running as the parent of xterm); one `VBoxClient` helper 112 MB (≤ 4.5 MB in the i3 session) |
+
 ## Interpretation
-- **XFCE uses 247 MiB more RAM (+41 % of the whole system's used memory) and 16 more user processes** just to show an empty desktop. The extra processes are XFCE's always-running components: `xfce4-session`, `xfwm4` (window manager and compositor), `xfce4-panel` and its plugin processes, `xfdesktop` (wallpaper and icons), `xfsettingsd`, `xfconfd` (settings daemon), `Thunar --daemon`, `xfce4-notifyd`, `xfce4-power-manager`, `tumblerd`, `polkit` agent, `at-spi` accessibility bus, `gvfsd`… In i3, each of those roles is either absent or done by one small program (i3 + i3bar/i3status + dunst).
-- **PSS is the fair metric.** RSS counts shared libraries (GTK, glib, cairo) once **per process**, so it grows to 776 MiB for XFCE. PSS (*proportional set size*) divides each shared page among the processes that map it, so the sum is the real memory of the session: **143 MiB vs 356 MiB**.
-- **Total processes differ by only 8** because most of the 137 are kernel threads (`kworker`, `ksoftirqd`…) and system services, which are the same in both sessions.
-- **Why it matters for this project:** Topic 2 deliberately creates memory pressure on a 4 GiB VM, and Topics 1 and 4 measure CPU shares. With i3 the baseline is 250 MiB lower and has 16 fewer background processes that could wake up and disturb the measurements.
-- **Trade-off:** XFCE gives a complete point-and-click desktop (file manager, settings panels, power management). i3 requires learning keyboard shortcuts (`docs/cheatsheet.md`), which for a distribution built to study the OS from the terminal is acceptable, and even desirable.
+- **XFCE runs 16 more user processes and its session takes 2.5× the proportional memory (PSS 356 vs 143 MiB).** The extra processes are XFCE's always-running components: session manager, desktop, settings daemons, panel and its plugins, Thunar daemon, power manager, polkit agent, accessibility bus. In i3 each of those roles is either absent or done by one small program (i3, i3bar/i3status, dunst).
+- **Honest correction of the raw difference.** Of the +247 MiB of system-wide used memory, part is not XFCE itself: `xfce4-appfinder` (42 MB RSS) was only there because we used Alt+F2 to open the terminal, and one VirtualBox guest helper (`VBoxClient`) grew to 112 MB in the XFCE session while it stayed under 4.5 MB in i3. We did not investigate why (it is VirtualBox's clipboard/display integration, not part of XFCE). Even excluding both, XFCE's own components add about **+380 MB of RSS** (776 − 112 − 42 = 622 MB vs 245 MB), i.e. still about **2.5×** the i3 session.
+- **PSS is the fair metric.** RSS counts shared libraries (GTK, glib, cairo) once **per process**, which inflates it when many GTK programs run. PSS (*proportional set size*) divides each shared page among the processes that map it, so the sum is the real memory of the session.
+- **Total processes differ by only 8** because most of the ~140 processes are kernel threads (`kworker`, `ksoftirqd`…) and system services, the same in both sessions.
+- **Why it matters for this project:** Topic 2 deliberately creates memory pressure on a 4 GiB VM, and Topics 1 and 4 measure CPU shares. With i3 the baseline is lower and there are 16 fewer background processes that could wake up and disturb the measurements.
+- **Trade-off:** XFCE gives a complete point-and-click desktop (file manager, settings panels, power management). i3 requires learning keyboard shortcuts (`docs/cheatsheet.md`), which is acceptable, and even desirable, for a distribution built to study the OS from the terminal.
