@@ -1,7 +1,7 @@
 ! =============================================================================
 !  NeonArch — xterm theme (loaded by ~/.xinitrc with xrdb)
 !  xterm is rendered on the CPU through X11 (Xft). We use it instead of a
-!  GPU-accelerated terminal because the VM's virtual GPU has no 3D support
+!  GPU-accelerated terminal because the virtual GPU of the VM has no 3D support
 !  (see docs/bitacora_ia.md, entry 5).
 ! =============================================================================
 XTerm*termName:          xterm-256color

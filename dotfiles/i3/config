@@ -66,7 +66,14 @@ bindsym $mod+9 workspace number $ws9
 #  or a Layer 2 feature.
 # =============================================================================
 # --- Hernán ---
-# bindsym $mod+... exec --no-startup-id ...
+# Super+I: system stats HUD (neon-info, Layer 3 mandatory command) in a floating terminal
+bindsym $mod+i exec --no-startup-id xterm -class neon-hud -hold -e neon-info
+for_window [class="neon-hud"] floating enable, resize set 900 760, move position center
+# Super+B: "game mode" for the focused window (neon-boost: nice -5 + I/O priority, Topic 1)
+bindsym $mod+b exec --no-startup-id neon-boost --focused
+# Super+Shift+S: manual btrfs snapshot of / with snapper (Topic 3) + notification
+bindsym $mod+Shift+s exec --no-startup-id sh -c 'n=$(snapper -c root create --print-number --description "manual (Super+Shift+S)") && notify-send -a NeonArch "Snapshot #$n created" "snapper -c root list" || notify-send -u critical NeonArch "snapshot failed"'
+
 # --- Royner ---
 # bindsym $mod+... exec --no-startup-id ...
 
