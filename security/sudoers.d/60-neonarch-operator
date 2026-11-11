@@ -1,0 +1,3 @@
+# NeonArch — Topic 9: least privilege. The "operator" user may ONLY restart and
+# inspect our own service; any other command through sudo is denied and logged.
+operator ALL=(root) /usr/bin/systemctl restart neon-health.service, /usr/bin/systemctl status neon-health.service, /usr/bin/journalctl -u neon-health.service

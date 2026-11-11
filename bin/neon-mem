@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""
+neon-mem — real-time memory monitor (Topic 2, memory).
+
+Shows physical memory, every swap device with its priority, the zram
+compression ratio, the system-wide paging activity per second (swap in/out,
+major faults) and the processes with most page faults in the last interval.
+Sources: /proc/meminfo, /proc/swaps, /sys/block/zram*/mm_stat, /proc/vmstat,
+/proc/<pid>/stat (minflt = field 10, majflt = field 12).
+
+    neon-mem          refresh every second (Ctrl+C to quit)
+    neon-mem -1       one sample (1 s) and exit
+"""
+import os, sys, time
+
+def kv(path):
+    out = {}
+    for line in open(path):
+        k, v = line.replace(":", " ").split()[:2]
+        out[k] = int(v)
+    return out
+
+def faults():
+    out = {}
+    for p in os.listdir("/proc"):
+        if not p.isdigit():
+            continue
+        try:
+            s = open(f"/proc/{p}/stat").read()
+        except OSError:
+            continue
+        comm = s[s.index("(") + 1:s.rindex(")")]
+        r = s[s.rindex(")") + 2:].split()
+        out[int(p)] = (comm, int(r[7]), int(r[9]))     # minflt, majflt
+    return out
+
+def mib(kib): return f"{kib / 1024:8.1f} MiB"
+
+def frame():
+    v1, f1 = kv("/proc/vmstat"), faults(); time.sleep(1); v2, f2 = kv("/proc/vmstat"), faults()
+    m = kv("/proc/meminfo")
+    used = m["MemTotal"] - m["MemAvailable"]
+    print(f"RAM   total {mib(m['MemTotal'])}  used {mib(used)}  available {mib(m['MemAvailable'])}  cache {mib(m['Cached'])}")
+    print(f"SWAP  total {mib(m['SwapTotal'])}  used {mib(m['SwapTotal'] - m['SwapFree'])}")
+    for line in open("/proc/swaps").readlines()[1:]:
+        d, t, size, usedk, prio = line.split()
+        print(f"      {d:<20} {t:<10} prio {prio:>4}  used {mib(int(usedk))} of {mib(int(size))}")
+    for z in sorted(os.listdir("/sys/block")):
+        if z.startswith("zram"):
+            o, c, tot = (int(x) for x in open(f"/sys/block/{z}/mm_stat").read().split()[:3])
+            ratio = f"{o / c:.2f}:1" if c else "-"
+            print(f"ZRAM  {z}: stores {o / 2**20:.1f} MiB in {tot / 2**20:.1f} MiB of RAM  ratio {ratio}")
+    d = lambda k: v2.get(k, 0) - v1.get(k, 0)
+    print(f"PAGING/s  swap-in {d('pswpin'):>6} pages   swap-out {d('pswpout'):>6} pages   major faults {d('pgmajfault'):>6}")
+    top = sorted(((f2[p][1] - f1[p][1], f2[p][2] - f1[p][2], p, f2[p][0]) for p in f2 if p in f1),
+                 key=lambda x: (x[1], x[0]), reverse=True)[:8]
+    print(f"\n{'PID':>7} {'MINFLT/s':>9} {'MAJFLT/s':>9}  COMMAND")
+    for mn, mj, p, c in top:
+        print(f"{p:>7} {mn:>9} {mj:>9}  {c}")
+
+if __name__ == "__main__":
+    try:
+        while True:
+            if "-1" not in sys.argv:
+                print("\033[2J\033[H", end="")
+            frame()
+            if "-1" in sys.argv:
+                break
+    except KeyboardInterrupt:
+        pass

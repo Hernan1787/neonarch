@@ -1,0 +1,4 @@
+# NeonArch — allow members of wheel to run ONLY neon-boost as root without a password,
+# so the Super+B shortcut can raise the priority of the focused window.
+# Restricted to one absolute path installed by the neonarch-tools package (root-owned).
+%wheel ALL=(root) NOPASSWD: /usr/bin/neon-boost
