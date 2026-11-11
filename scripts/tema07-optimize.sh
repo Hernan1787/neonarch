@@ -36,7 +36,12 @@ HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block 
 # no kms (the GPU driver is not needed to mount the root; udev loads vmwgfx later)
 COMPRESSION="zstd"
 HOOKS=(base systemd autodetect microcode modconf keyboard sd-vconsole block filesystems)' ;;
-  *) echo "usage: $0 [lz4|slim]"; exit 1 ;;
+  default)   # restore the Arch defaults (fastest of the three measured) and the 3 s menu
+      sudo rm -f "$CONF"; sudo mkinitcpio -P 2>&1 | tee "$OUT/mkinitcpio-default.txt"
+      sudo sed -i 's/^timeout.*/timeout 3/' /boot/loader/loader.conf
+      sudo ls -l /boot/initramfs-linux.img | tee "$OUT/initramfs-default.txt"
+      echo "[changed] restored default initramfs and timeout 3"; exit 0 ;;
+  *) echo "usage: $0 [lz4|slim|default]"; exit 1 ;;
 esac
 if [[ "$(cat "$CONF" 2>/dev/null)" == "$WANT" ]]; then
     echo "[ok]      initramfs already '$VARIANT'"
