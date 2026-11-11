@@ -1,0 +1,43 @@
+$ pactree -d 2 i3-wm
+i3-wm
+├─libev
+│ └─glibc
+├─libxkbcommon-x11
+│ ├─glibc
+│ ├─libxcb
+│ ├─libxkbcommon
+│ └─libxkbcommon provides libxkbcommon.so=0-64
+├─pango
+│ ├─cairo
+│ ├─fontconfig
+│ ├─freetype2
+│ ├─fribidi
+│ ├─glib2
+│ ├─glibc
+│ ├─harfbuzz
+│ ├─libsysprof-capture
+│ ├─libthai
+│ ├─libx11
+│ ├─libxft
+│ └─libxrender
+├─startup-notification
+│ ├─glibc
+│ ├─libx11
+│ ├─libxcb
+│ └─xcb-util
+├─noto-fonts provides ttf-font
+├─xcb-util-cursor
+│ ├─libxcb
+│ ├─xcb-util-renderutil
+│ ├─xcb-util-image
+│ └─glibc
+├─xcb-util-keysyms
+│ ├─libxcb
+│ └─glibc
+├─xcb-util-wm
+│ ├─libxcb
+│ └─glibc
+├─xcb-util-xrm
+│ └─xcb-util
+└─yajl
+  └─glibc

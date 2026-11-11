@@ -1,0 +1,2 @@
+label,boot_id,firmware,loader,kernel,initrd,userspace,total
+before,57d11d34-71dd-466f-9ad6-721c4db942c6,0.000,0.000,0.671,1.231,2.576,4.479

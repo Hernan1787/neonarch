@@ -1,0 +1,11 @@
+$ pacman --version | head -3; grep -E '^(SigLevel|LocalFileSigLevel|Architecture|ParallelDownloads)' /etc/pacman.conf; grep -E '^\[' /etc/pacman.conf
+
+ .--.                  Pacman v7.1.0 - libalpm v16.0.1
+/ _.-' .-.  .-.  .-.   Copyright (C) 2006-2025 Pacman Development Team
+Architecture = auto
+ParallelDownloads = 5
+SigLevel    = Required DatabaseOptional
+LocalFileSigLevel = Optional
+[options]
+[core]
+[extra]

@@ -1,0 +1,10 @@
+$ pactree -r -d 1 python
+python
+├─apparmor
+├─fio
+├─gdb
+├─gdb-common
+├─glusterfs
+├─neonarch-tools
+├─python-legacy-cgi
+└─snap-pac

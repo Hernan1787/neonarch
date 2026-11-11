@@ -1,0 +1,9 @@
+$ pacman -Sp --print-format '%n %v' xfce4-terminal
+libxfce4util 4.20.1-1
+xfconf 4.20.0-2
+libgtop 2.41.3-2
+libxfce4ui 4.20.2-1
+vte-common 0.84.1-1
+vte3 0.84.1-1
+gtk-layer-shell 0.10.1-1
+xfce4-terminal 1.2.0-1

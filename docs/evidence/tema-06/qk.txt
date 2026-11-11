@@ -1,0 +1,2 @@
+$ pacman -Qkk neonarch-tools
+neonarch-tools: 11 total files, 0 altered files

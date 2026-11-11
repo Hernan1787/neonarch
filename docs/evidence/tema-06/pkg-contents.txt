@@ -1,0 +1,15 @@
+$ tar -tvf pacman/pkgbuild/neonarch-tools/./neonarch-tools-1.0.0-1-any.pkg.tar.zst
+-rw-r--r-- root/root     16307 2026-11-10 23:38 .BUILDINFO
+-rw-r--r-- root/root       454 2026-11-10 23:38 .MTREE
+-rw-r--r-- root/root       615 2026-11-10 23:38 .PKGINFO
+drwxr-xr-x root/root         0 2026-11-10 23:38 usr/
+drwxr-xr-x root/root         0 2026-11-10 23:38 usr/bin/
+-rwxr-xr-x root/root         0 2026-11-10 23:38 usr/bin/neon-boost
+-rwxr-xr-x root/root     20555 2026-11-10 23:38 usr/bin/neon-info
+-rwxr-xr-x root/root         0 2026-11-10 23:38 usr/bin/neon-mem
+-rwxr-xr-x root/root         0 2026-11-10 23:38 usr/bin/neon-net
+-rwxr-xr-x root/root         0 2026-11-10 23:38 usr/bin/neon-ps
+drwxr-xr-x root/root         0 2026-11-10 23:38 usr/share/
+drwxr-xr-x root/root         0 2026-11-10 23:38 usr/share/doc/
+drwxr-xr-x root/root         0 2026-11-10 23:38 usr/share/doc/neonarch-tools/
+-rw-r--r-- root/root      6545 2026-11-10 23:38 usr/share/doc/neonarch-tools/README.md

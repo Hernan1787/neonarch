@@ -1,0 +1,5 @@
+$ tail -n 5 /var/log/neonarch/pacman.log
+2026-11-10T23:46:23-06:00  2 package(s): github-cli mailcap  | orphans=0
+2026-11-10T23:38:49-06:00  1 package(s): neonarch-tools  | orphans=0
+2026-11-10T23:38:50-06:00  1 package(s): figlet  | orphans=0
+2026-11-10T23:38:51-06:00  1 package(s): figlet  | orphans=0

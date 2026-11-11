@@ -1,0 +1,7 @@
+$ sudo pacman-key --list-keys 2>/dev/null | grep -c '^pub' | xargs echo 'trusted public keys:'; sudo pacman-key --list-sigs archlinux 2>/dev/null | head -5
+trusted public keys: 183
+pub   rsa2048 2011-08-12 [SC]
+      02FD1C7A934E614545849F19A6234074498E9CEE
+      Revocable by: DD12A30E507068C7B405C18ED51C8A5363B4835B
+      Revocable by: BDF456E33168B3A87FEF7191829E9C732C3FFEBC
+sig    R     A6234074498E9CEE 2013-01-14  [self-signature]

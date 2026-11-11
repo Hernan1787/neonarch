@@ -1,0 +1,12 @@
+$ pacman -Ql neonarch-tools
+neonarch-tools /usr/
+neonarch-tools /usr/bin/
+neonarch-tools /usr/bin/neon-boost
+neonarch-tools /usr/bin/neon-info
+neonarch-tools /usr/bin/neon-mem
+neonarch-tools /usr/bin/neon-net
+neonarch-tools /usr/bin/neon-ps
+neonarch-tools /usr/share/
+neonarch-tools /usr/share/doc/
+neonarch-tools /usr/share/doc/neonarch-tools/
+neonarch-tools /usr/share/doc/neonarch-tools/README.md

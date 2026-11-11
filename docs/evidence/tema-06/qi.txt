@@ -1,0 +1,25 @@
+$ pacman -Qi neonarch-tools
+Name            : neonarch-tools
+Version         : 1.0.0-1
+Description     : NeonArch own commands: neon-info, neon-ps, neon-boost, neon-net, neon-mem (read /proc, /sys and use syscalls)
+Architecture    : any
+URL             : https://github.com/Hernan1787/neonarch
+Licenses        : MIT
+Groups          : None
+Provides        : None
+Depends On      : python
+Optional Deps   : hwdata: PCI vendor/device names in neon-info [installed]
+                  xdotool: neon-boost --focused (boost the focused window) [installed]
+                  libnotify: desktop notifications from neon-boost --focused [installed]
+Required By     : None
+Optional For    : None
+Conflicts With  : None
+Replaces        : None
+Installed Size  : 26.46 KiB
+Packager        : Unknown Packager
+Build Date      : Tue 10 Nov 2026 11:38:47 PM CST
+Install Date    : Tue 10 Nov 2026 11:38:48 PM CST
+Install Reason  : Explicitly installed
+Install Script  : No
+Validated By    : None
+

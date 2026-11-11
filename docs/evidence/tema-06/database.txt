@@ -1,0 +1,14 @@
+$ echo 'local db entries:' $(ls /var/lib/pacman/local | wc -l); ls /var/lib/pacman/local | head -3; ls /var/lib/pacman/local/$(ls /var/lib/pacman/local | grep '^bash-' | head -1); du -sh /var/lib/pacman/local /var/lib/pacman/sync; ls -l /var/lib/pacman/sync
+local db entries: 416
+acl-2.4.0-1
+adwaita-cursors-51.0-1
+adwaita-fonts-51.0-2
+desc
+files
+install
+mtree
+12M	/var/lib/pacman/local
+8.8M	/var/lib/pacman/sync
+total 8984
+-rw-r--r-- 1 root root  130754 Nov 10 14:41 core.db
+-rw-r--r-- 1 root root 9065888 Nov 10 23:16 extra.db

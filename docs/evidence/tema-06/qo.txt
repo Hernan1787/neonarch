@@ -1,0 +1,2 @@
+$ pacman -Qo /usr/bin/neon-info
+/usr/bin/neon-info is owned by neonarch-tools 1.0.0-1
