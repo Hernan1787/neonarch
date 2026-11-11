@@ -1,0 +1,88 @@
+=== 1. Estado inicial ===
+
+[1;35m$ pacman -Q htop[0m
+htop 3.5.3-1
+
+[1;35m$ command -v htop && htop --version[0m
+/usr/bin/htop
+htop 3.5.3-1-arch
+
+   [Enter] para continuar...=== 2. Cambio destructivo: desinstalar htop (snap-pac crea snapshots pre/post) ===
+
+[1;35m$ sudo pacman -Rns --noconfirm htop[0m
+checking dependencies...
+
+Packages (1) htop-3.5.3-1
+
+Total Removed Size:  0.41 MiB
+
+:: Do you want to remove these packages? [Y/n] 
+:: Running pre-transaction hooks...
+(1/1) Performing snapper pre snapshots for the following configurations...
+==> root: 22
+:: Processing package changes...
+removing htop...
+:: Running post-transaction hooks...
+(1/5) Arming ConditionNeedsUpdate...
+(2/5) NeonArch: logging transaction, checking orphans and kernel version...
+  logged to /var/log/neonarch/pacman.log (1 package(s) in this transaction)
+(3/5) Updating icon theme caches...
+(4/5) Updating the desktop file MIME type cache...
+(5/5) Performing snapper post snapshots for the following configurations...
+==> root: 23
+
+[1;35m$ sudo snapper -c root list | tail -n 3[0m
+21 │ post   │    20 │ Wed 11 Nov 2026 12:07:14 AM CST │ root   │ number   │ htop                                                           │
+22 │ pre    │       │ Wed 11 Nov 2026 12:09:58 AM CST │ root   │ number   │ pacman -Rns --noconfirm htop                                   │
+23 │ post   │    22 │ Wed 11 Nov 2026 12:09:58 AM CST │ root   │ number   │ htop                                                           │
+
+   [Enter] para continuar...=== 3. htop ya no existe ===
+
+[1;35m$ pacman -Q htop[0m
+error: package 'htop' was not found
+
+[1;35m$ ls -l /usr/bin/htop[0m
+ls: cannot access '/usr/bin/htop': No such file or directory
+
+[1;35m$ command -v htop || echo 'htop: not found'[0m
+htop: not found
+
+   [Enter] para continuar...=== 4. Rollback de los archivos: snapshot PRE=22 -> POST=23 ===
+
+[1;35m$ sudo snapper -c root status 22..23 | head -n 15[0m
+-..... /usr/bin/htop
+-..... /usr/share/applications/htop.desktop
+c..... /usr/share/icons/hicolor/icon-theme.cache
+-..... /usr/share/icons/hicolor/scalable/apps/htop.svg
+-..... /usr/share/man/man1/htop.1.gz
+-..... /usr/share/pixmaps/htop.png
+c..... /var/cache/ldconfig/aux-cache
+-..... /var/lib/pacman/local/htop-3.5.3-1
+-..... /var/lib/pacman/local/htop-3.5.3-1/desc
+-..... /var/lib/pacman/local/htop-3.5.3-1/files
+-..... /var/lib/pacman/local/htop-3.5.3-1/mtree
+
+[1;35m$ sudo snapper -c root undochange 22..23[0m
+create:9 modify:2 delete:0
+
+   [Enter] para continuar...=== 5. Verificación ===
+
+[1;35m$ pacman -Q htop[0m
+htop 3.5.3-1
+
+[1;35m$ ls -l /usr/bin/htop[0m
+-rwxr-xr-x 1 root root 404728 Nov 11 00:10 /usr/bin/htop
+
+[1;35m$ command -v htop && htop --version[0m
+/usr/bin/htop
+htop 3.5.3-1-arch
+
+[1;35m$ pacman -Qkk htop      # files match pacman's database again[0m
+warning: htop: /usr/bin/htop (Modification time mismatch)
+warning: htop: /usr/share/applications/htop.desktop (Modification time mismatch)
+warning: htop: /usr/share/icons/hicolor/scalable/apps/htop.svg (Modification time mismatch)
+warning: htop: /usr/share/man/man1/htop.1.gz (Modification time mismatch)
+warning: htop: /usr/share/pixmaps/htop.png (Modification time mismatch)
+htop: 16 total files, 5 altered files
+
+Demo guardada en docs/evidence/tema-03/rollback-demo.txt
