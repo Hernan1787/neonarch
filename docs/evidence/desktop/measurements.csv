@@ -1,0 +1,11 @@
+timestamp,host,label,sample,mem_used_mib,mem_available_mib,procs_total,procs_user,user_rss_mib,user_pss_mib
+2026-11-11T00:02:32-06:00,neonarch-hernan,i3,1,591,3296,137,25,245,143
+2026-11-11T00:02:42-06:00,neonarch-hernan,i3,2,595,3293,137,25,245,143
+2026-11-11T00:02:53-06:00,neonarch-hernan,i3,3,597,3291,137,25,246,143
+2026-11-11T00:03:03-06:00,neonarch-hernan,i3,4,600,3288,137,25,246,142
+2026-11-11T00:03:13-06:00,neonarch-hernan,i3,5,606,3282,137,25,245,143
+2026-11-11T01:05:13-06:00,neonarch-hernan,xfce,1,842,3045,145,41,776,356
+2026-11-11T01:05:23-06:00,neonarch-hernan,xfce,2,844,3044,145,41,776,356
+2026-11-11T01:05:33-06:00,neonarch-hernan,xfce,3,846,3042,145,41,776,356
+2026-11-11T01:05:44-06:00,neonarch-hernan,xfce,4,846,3042,145,41,776,356
+2026-11-11T01:05:54-06:00,neonarch-hernan,xfce,5,846,3042,145,41,776,356
