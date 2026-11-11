@@ -67,7 +67,18 @@ Measured on `neonarch-hernan` (kernel 7.2.15, VirtualBox VDI on the host's NVMe 
 
 **Discarded first run:** with a *buffered* loop device the ext4 results were 5785 MiB/s and 217 914 random-read IOPS (71 µs), i.e. the page cache, not the disk. They are kept in `fio/discarded-buffered-loop/` and explained in `docs/bitacora_ia.md` (entry 7).
 
-**Snapshots:** `snapper -c root list` shows snapshot #1 (baseline) and the hourly timeline snapshots; `snap-pac` adds a pre/post pair for every pacman transaction. Live rollback demo: `scripts/tema03-rollback-demo.sh` → `docs/evidence/tema-03/rollback-demo.txt`.
+**Snapshots and rollback** (`docs/evidence/tema-03/rollback-demo.txt`, 2026-11-11):
+- `snapper -c root list` shows snapshot #1 (baseline), hourly timeline snapshots, `single` snapshots taken with our shortcut **Super+Shift+S** (#17, #19), and a **pre/post pair for every pacman transaction** created by `snap-pac`.
+- Demo `scripts/tema03-rollback-demo.sh`:
+
+| Step | Command | Result |
+|---|---|---|
+| 1. initial state | `pacman -Q htop`, `htop --version` | `htop 3.5.3-1` installed and working |
+| 2. destructive change | `sudo pacman -Rns htop` | snap-pac took **#22 (pre)** and **#23 (post)** automatically; our hook also logged the transaction |
+| 3. it is gone | `pacman -Q htop`, `ls -l /usr/bin/htop` | `error: package 'htop' was not found`, `No such file or directory` |
+| 4. what changed | `snapper status 22..23` | `-` (deleted): `/usr/bin/htop`, man page, icons, `.desktop`, **and pacman's database entry** `/var/lib/pacman/local/htop-3.5.3-1/{desc,files,mtree}`; `c` (changed): icon cache, ldconfig cache |
+| 4. rollback | `snapper undochange 22..23` | `create:9 modify:2 delete:0` (≈ 0.1 s) |
+| 5. verification | `pacman -Q htop`, `htop --version`, `pacman -Qkk htop` | installed and working again; `16 total files, 5 altered files`, all only *Modification time mismatch* |
 
 ## 5. Interpretation
 - **Reads are equivalent** (within 2–6 %, inside the run-to-run variation). Reading does not modify anything, so copy-on-write costs nothing; the extra btrfs work (verifying the crc32c checksum of every block) is cheap compared with the I/O itself.
@@ -75,4 +86,7 @@ Measured on `neonarch-hernan` (kernel 7.2.15, VirtualBox VDI on the host's NVMe 
 - **Controlled comparison inside the same disk:** the ext4 image itself lives on the btrfs root but was created with `chattr +C` (**NOCOW**). Data that bypasses CoW writes 3–4× faster on the same device and the same btrfs filesystem. This isolates CoW (plus checksums) as the cause.
 - **Sequential write variance is high on btrfs** (±34.7 MiB/s). A likely contributor is that the mount has `compress=zstd:1`: btrfs first tries to compress, finds the data incompressible (fio fills buffers with random data) and falls back to uncompressed extents, and direct I/O on a compression-enabled file can be turned into buffered I/O. This makes the timing less regular.
 - **Why we still chose btrfs:** for a desktop OS the dominant pattern is reading, where btrfs matches ext4, while CoW gives us what ext4 cannot: instant snapshots before every pacman upgrade (`snap-pac`), rollback in seconds, checksums that detect silent corruption, and transparent compression for normal (compressible) files. Workloads that are dominated by random writes (databases, VM images, swapfiles) should use NOCOW files or subvolumes, which is exactly what we did with `@swap`.
+- **Rollback:** the snapshot is the state of `@` just before the pacman transaction. `snapper status` diffs two snapshots by walking the btrfs trees, and `undochange` copies back what changed. It also restored **pacman's own database** (`/var/lib/pacman/local/htop-*`), so pacman "remembers" htop again: the system is consistent, not just the binary. This works because `/var/lib/pacman` lives inside `@`, while `/var/log` (`@var_log`) and the package cache (`@pkg`) are separate subvolumes that a rollback does not touch, so the logs of what happened survive.
+- **What `pacman -Qkk` revealed:** after the rollback, 5 files differ from pacman's MTREE **only in modification time**; size, permissions and checksums match. `undochange` is a *file-level* restore: it creates the files again with the current time. For an exact, whole-system rollback, snapper offers `snapper rollback`, which makes a writable copy of the snapshot and sets it as the default subvolume (atomic, but it needs a reboot and a layout where `/` is mounted by default subvolume). Our `fstab` uses `subvol=/@` (no `subvolid`) precisely so that a renamed/replaced `@` keeps booting (see `docs/instalacion.md`, step 7).
+- **Demo pitfall found:** the first version of the demo printed `/usr/bin/htop` for `command -v htop` *after* the removal, because bash caches command paths (hash table). Fixed with `hash -r` (AI log, entry 8).
 - **Limitations:** a VM on a VDI file (the host OS cache and SSD are underneath), 3 runs of 20 s, one file size; absolute numbers are not those of real hardware, but the relative comparison on the same virtual disk is valid.
