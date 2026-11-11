@@ -45,9 +45,9 @@
 \begin{titlepage}
 \centering
 \vspace*{1.5cm}
-{\large Instituto Tecnológico de Costa Rica\\ Escuela de Ingeniería en Computación\par}
+{\large Instituto Tecnológico de Costa Rica\\ Campus Tecnológico Local San Carlos\\ Escuela de Ingeniería en Computación\par}
 \vspace{0.6cm}
-{\normalsize IC-6600 Principios de Sistemas Operativos\\ II Proyecto Programado · Alternativa A\par}
+{\normalsize IC-6600 Principios de Sistemas Operativos · Grupo 51\\ II Proyecto Programado · Alternativa A\par}
 \vspace{2.2cm}
 {\Huge\bfseries\color{neon} NeonArch\par}
 \vspace{0.3cm}
@@ -277,7 +277,7 @@ allocate beyond 64\,MiB & OOM kill, restart (0$\rightarrow$1)\\
 \caption{Boot phases per initramfs variant (mean of 3 boots; total mean $\pm$ sd). Image sizes: 15.2, 21.9 and 14.9\,MB.}
 \end{figure}
 
-\textbf{Interpretation.} lz4 made the boot \emph{slower} (+0.55\,s in kernel+initrd, very consistent): its image is 44\,\% larger, and on a Ryzen CPU the extra I/O costs more than the faster decompression saves. The slim image (only 2\,\% smaller) was within the noise of the default. The critical chain is dominated by device discovery (\cmd{.device} units $\approx$1.9\,s in \cmd{blame}), not by the initramfs. We kept the Arch defaults: two plausible optimisations were \emph{rejected with data}. The firmware and loader phases are not reported in this VM (no \cmd{LoaderTime*} EFI variables), so the menu timeout change could not be measured. The first recorded boot (just after a system upgrade, with \cmd{ldconfig} in the critical chain) was discarded.
+\textbf{Interpretation.} lz4 made the boot \emph{slower} (+0.55\,s in kernel+initrd, very consistent): its image is 44\,\% larger, and on a Ryzen CPU the extra I/O costs more than the faster decompression saves. The slim image (only 2\,\% smaller) was within the noise of the default. The critical chain is dominated by device discovery (\cmd{.device} units $\approx$1.9\,s in \cmd{blame}), not by the initramfs. We kept the Arch defaults: two plausible optimisations were \emph{rejected with data}. The NVRAM boot entry registered at install time was later lost by VirtualBox (\cmd{efibootmgr}); the VM keeps booting through the fallback copy \cmd{\textbackslash EFI\textbackslash BOOT\textbackslash BOOTX64.EFI}. The firmware and loader phases are not reported in this VM (no \cmd{LoaderTime*} EFI variables), so the menu timeout change could not be measured. The first recorded boot (just after a system upgrade, with \cmd{ldconfig} in the critical chain) was discarded.
 
 \textbf{Rescue demo.} Extra boot entries add \cmd{systemd.unit=rescue.target} and \cmd{emergency.target}; \cmd{bootctl set-oneshot} selects one for the next boot only. In rescue, \cmd{sulogin} asks for the root password and only 11 targets are active (sysinit, local-fs, swap, rescue…): filesystems mounted, but no \cmd{basic}, \cmd{network}, \cmd{multi-user} or \cmd{graphical} target. \cmd{systemctl default} continues the normal boot.
 
