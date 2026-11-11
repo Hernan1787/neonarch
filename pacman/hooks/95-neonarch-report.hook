@@ -1,0 +1,16 @@
+# NeonArch — Topic 6: own ALPM hook
+# After every pacman transaction: log what changed, report orphan packages and
+# warn when the kernel (or systemd) was upgraded but the old one is still running.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = NeonArch: logging transaction, checking orphans and kernel version...
+When = PostTransaction
+Exec = /usr/local/lib/neonarch/pacman-report
+# pacman passes the names of the packages of the transaction on stdin
+NeedsTargets

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Executed by /etc/pacman.d/hooks/95-neonarch-report.hook (as root, after the transaction).
+LOG=/var/log/neonarch/pacman.log
+mkdir -p "$(dirname "$LOG")"
+mapfile -t targets                                   # package names from pacman (NeedsTargets)
+orphans=$(pacman -Qdtq 2>/dev/null | wc -l)
+printf '%s  %d package(s): %s  | orphans=%d\n' "$(date --iso-8601=seconds)" \
+    "${#targets[@]}" "${targets[*]}" "$orphans" >> "$LOG"
+echo "  logged to $LOG (${#targets[@]} package(s) in this transaction)"
+if (( orphans > 0 )); then
+    echo "  $orphans orphan package(s) (installed as dependencies, no longer required):"
+    pacman -Qdtq | sed 's/^/    - /'
+    echo "  remove them with: sudo pacman -Rns \$(pacman -Qdtq)"
+fi
+for t in "${targets[@]}"; do
+    if [[ $t == linux ]]; then
+        installed=$(pacman -Q linux 2>/dev/null | awk '{print $2}' | sed 's/\.arch/-arch/')
+        running=$(uname -r)
+        if [[ -n $installed && $running != "$installed" ]]; then
+            echo "  ⚠ kernel upgraded: running $running, installed $installed -> reboot to use it"
+        fi
+    fi
+    [[ $t == systemd ]] && echo "  ⚠ systemd upgraded: consider 'systemctl daemon-reexec' or a reboot"
+done
+exit 0
