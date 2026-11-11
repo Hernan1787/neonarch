@@ -1,0 +1,1 @@
+-rwx------ 1 root root 15224054 Nov 10 23:20 /boot/initramfs-linux.img

@@ -1,0 +1,7 @@
+default neonarch.conf
+timeout 1
+console-mode max
+editor no
+# NeonArch Topic 7: faster initramfs (lz4 decompresses faster; no fsck hook on btrfs)
+COMPRESSION="lz4"
+HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block filesystems)

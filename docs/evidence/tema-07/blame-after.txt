@@ -1,0 +1,133 @@
+2.948s dev-disk-by\x2dpartuuid-b71dfe2d\x2d775f\x2d4490\x2d8815\x2dad58d18466a9.device
+2.948s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2dpartuuid-b71dfe2d\x2d775f\x2d4490\x2d8815\x2dad58d18466a9.device
+2.948s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart2.device
+2.948s dev-sda2.device
+2.947s dev-disk-by\x2ddiskseq-1\x2dpart2.device
+2.947s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2duuid-969143b8\x2dbe17\x2d4e4d\x2d9b13\x2d6590a914b381.device
+2.947s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2dpartnum-2.device
+2.947s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2dlabel-ROOT.device
+2.947s sys-devices-pci0000:00-0000:00:0d.0-ata1-host0-target0:0:0-0:0:0:0-block-sda-sda2.device
+2.947s dev-disk-by\x2dlabel-ROOT.device
+2.946s dev-disk-by\x2duuid-969143b8\x2dbe17\x2d4e4d\x2d9b13\x2d6590a914b381.device
+2.946s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1\x2dpart2.device
+2.945s dev-disk-by\x2did-ata\x2dVBOX_HARDDISK_VBbd1d75d3\x2dff680195\x2dpart2.device
+2.945s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2dpartlabel-ROOT.device
+2.945s dev-disk-by\x2dpartlabel-ROOT.device
+2.927s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2dpartlabel-EFI.device
+2.927s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart1.device
+2.927s dev-disk-by\x2duuid-87A6\x2dDFD0.device
+2.927s dev-disk-by\x2dpartuuid-f6102576\x2d38bd\x2d4200\x2dada5\x2df57de3949654.device
+2.927s dev-disk-by\x2did-ata\x2dVBOX_HARDDISK_VBbd1d75d3\x2dff680195\x2dpart1.device
+2.927s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2dpartuuid-f6102576\x2d38bd\x2d4200\x2dada5\x2df57de3949654.device
+2.927s dev-sda1.device
+2.927s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2duuid-87A6\x2dDFD0.device
+2.927s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1\x2dpart1.device
+2.927s dev-disk-by\x2ddesignator-esp.device
+2.927s dev-disk-by\x2ddiskseq-1\x2dpart1.device
+2.927s sys-devices-pci0000:00-0000:00:0d.0-ata1-host0-target0:0:0-0:0:0:0-block-sda-sda1.device
+2.927s dev-disk-by\x2dpartlabel-EFI.device
+2.927s dev-disk-by\x2dlabel-EFI.device
+2.927s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2dpartnum-1.device
+2.927s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0\x2dpart-by\x2dlabel-EFI.device
+2.917s dev-disk-by\x2did-ata\x2dVBOX_HARDDISK_VBbd1d75d3\x2dff680195.device
+2.917s dev-disk-by\x2ddiskseq-1.device
+2.917s dev-sda.device
+2.917s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.0.device
+2.917s sys-devices-pci0000:00-0000:00:0d.0-ata1-host0-target0:0:0-0:0:0:0-block-sda.device
+2.917s dev-disk-by\x2dpath-pci\x2d0000:00:0d.0\x2data\x2d1.device
+2.901s sys-devices-platform-serial8250-serial8250:0-serial8250:0.3-tty-ttyS3.device
+2.901s dev-ttyS3.device
+2.886s dev-ttyS2.device
+2.886s sys-devices-platform-serial8250-serial8250:0-serial8250:0.2-tty-ttyS2.device
+2.883s dev-ttyS1.device
+2.883s sys-devices-platform-serial8250-serial8250:0-serial8250:0.1-tty-ttyS1.device
+2.881s sys-devices-platform-serial8250-serial8250:0-serial8250:0.0-tty-ttyS0.device
+2.881s dev-ttyS0.device
+2.849s sys-module-configfs.device
+2.849s sys-module-fuse.device
+2.516s dev-disk-by\x2dpath-pci\x2d0000:00:01.1\x2data\x2d1.device
+2.516s dev-sr0.device
+2.516s dev-disk-by\x2dpath-pci\x2d0000:00:01.1\x2data\x2d1.0.device
+2.516s dev-disk-by\x2did-ata\x2dVBOX_CD\x2dROM_VB0\x2d01f003f6.device
+2.516s sys-devices-pci0000:00-0000:00:01.1-ata2-host1-target1:0:0-1:0:0:0-block-sr0.device
+2.430s dev-disk-by\x2ddiskseq-3.device
+1.456s initrd-switch-root.service
+ 250ms NetworkManager.service
+ 171ms systemd-udev-trigger.service
+ 153ms systemd-journald.service
+ 124ms systemd-tmpfiles-setup-dev-early.service
+ 101ms user@1000.service
+  74ms systemd-journal-flush.service
+  70ms dev-hugepages.mount
+  69ms systemd-tmpfiles-setup.service
+  69ms systemd-logind.service
+  69ms dev-mqueue.mount
+  65ms \x2esnapshots.mount
+  64ms sys-kernel-debug.mount
+  59ms sys-kernel-tracing.mount
+  56ms kmod-static-nodes.service
+  54ms systemd-remount-fs.service
+  53ms systemd-boot-random-seed.service
+  53ms sys-kernel-config.mount
+  51ms systemd-boot-update.service
+  51ms systemd-hostnamed.service
+  51ms systemd-sysctl.service
+  50ms systemd-udevd.service
+  49ms sys-fs-fuse-connections.mount
+  48ms systemd-udev-load-credentials.service
+  48ms boot.mount
+  45ms systemd-userdbd.service
+  44ms systemd-random-seed.service
+  43ms tmp.mount
+  42ms systemd-tmpfiles-setup-dev.service
+  41ms systemd-vconsole-setup.service
+  41ms swap.mount
+  38ms dev-zram0.swap
+  35ms var-cache-pacman-pkg.mount
+  34ms home.mount
+  30ms var-log.mount
+  30ms dbus-broker.service
+  25ms neon-health-report.service
+  23ms initrd-cleanup.service
+  21ms systemd-user-sessions.service
+  21ms systemd-zram-setup@zram0.service
+  15ms systemd-journalctl.socket
+  15ms systemd-userdb-load-credentials.service
+  14ms initrd-udevadm-cleanup-db.service
+  12ms systemd-update-utmp.service
+  11ms initrd-parse-etc.service
+  10ms systemd-modules-load.service
+   9ms user-runtime-dir@1000.service
+   1ms polkit-agent-helper.socket
+   1ms systemd-coredump.socket
+   1ms systemd-ask-password.socket
+ 859us systemd-sysupdate.socket
+ 854us sshd-unix-local.socket
+ 720us systemd-sysext.socket
+ 688us systemd-factory-reset.socket
+ 674us systemd-cryptenroll.socket
+ 595us systemd-creds.socket
+ 572us systemd-mute-console.socket
+ 571us systemd-storage-block.socket
+ 568us systemd-storage-fs.socket
+ 520us systemd-bootctl.socket
+ 456us systemd-repart.socket
+ 453us systemd-sysinstall.socket
+ 151us dirmngr@etc-pacman.d-gnupg.socket
+ 109us systemd-logind-varlink.socket
+ 103us dm-event.socket
+  82us keyboxd@etc-pacman.d-gnupg.socket
+  75us systemd-machined.socket
+  66us gpg-agent-extra@etc-pacman.d-gnupg.socket
+  66us dbus.socket
+  66us systemd-hostnamed.socket
+  63us gpg-agent-browser@etc-pacman.d-gnupg.socket
+  61us systemd-importd.socket
+  59us gpg-agent@etc-pacman.d-gnupg.socket
+  54us gpg-agent-ssh@etc-pacman.d-gnupg.socket
+  53us systemd-rfkill.socket
+  50us systemd-journald-dev-log.socket
+  46us systemd-userdbd.socket
+  41us systemd-udevd-varlink.socket
+  24us systemd-journald.socket
+  13us systemd-udevd-kernel.socket

@@ -1,0 +1,8 @@
+default neonarch.conf
+timeout 1
+console-mode max
+editor no
+# NeonArch Topic 7, attempt 2: smaller initramfs. zstd (default); no fsck (btrfs) and
+# no kms (the GPU driver is not needed to mount the root; udev loads vmwgfx later)
+COMPRESSION="zstd"
+HOOKS=(base systemd autodetect microcode modconf keyboard sd-vconsole block filesystems)
