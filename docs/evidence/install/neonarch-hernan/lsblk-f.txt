@@ -1,0 +1,13 @@
+$ lsblk -f
+# collected 2026-11-11T01:32:38-06:00 on neonarch-hernan by hernan
+NAME   FSTYPE FSVER LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+sda                                                                           
+├─sda1 vfat   FAT32 EFI   87A6-DFD0                             990.5M     3% /boot
+└─sda2 btrfs        ROOT  969143b8-be17-4e4d-9b13-6590a914b381   34.8G    10% /var/cache/pacman/pkg
+                                                                              /var/log
+                                                                              /swap
+                                                                              /.snapshots
+                                                                              /home
+                                                                              /
+sr0                                                                           
+zram0  swap   1     zram0 0af7f0f5-9649-4da7-bee9-ce0d9ee81f21                [SWAP]

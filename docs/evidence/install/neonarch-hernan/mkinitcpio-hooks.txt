@@ -1,0 +1,4 @@
+$ grep -E ^(HOOKS|MODULES)= /etc/mkinitcpio.conf
+# collected 2026-11-11T01:32:41-06:00 on neonarch-hernan by hernan
+MODULES=()
+HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block filesystems fsck)

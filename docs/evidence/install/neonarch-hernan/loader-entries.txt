@@ -1,0 +1,22 @@
+$ sudo sh -c for f in /boot/loader/loader.conf /boot/loader/entries/*.conf; do echo "== $f"; cat "$f"; done
+# collected 2026-11-11T01:32:41-06:00 on neonarch-hernan by hernan
+== /boot/loader/loader.conf
+default neonarch.conf
+timeout 3
+console-mode max
+editor no
+== /boot/loader/entries/neonarch.conf
+title NeonArch
+linux /vmlinuz-linux
+initrd /initramfs-linux.img
+options root=UUID=969143b8-be17-4e4d-9b13-6590a914b381 rootflags=subvol=@ rw
+== /boot/loader/entries/neonarch-emergency.conf
+title   NeonArch (emergency.target)
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=UUID=969143b8-be17-4e4d-9b13-6590a914b381 rootflags=subvol=@ rw systemd.unit=emergency.target
+== /boot/loader/entries/neonarch-rescue.conf
+title   NeonArch (rescue.target)
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=UUID=969143b8-be17-4e4d-9b13-6590a914b381 rootflags=subvol=@ rw systemd.unit=rescue.target

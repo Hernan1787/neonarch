@@ -1,0 +1,3 @@
+$ uname -a
+# collected 2026-11-11T01:32:41-06:00 on neonarch-hernan by hernan
+Linux neonarch-hernan 7.2.15-arch1-1 #1 SMP PREEMPT_DYNAMIC Tue, 03 Nov 2026 12:37:21 +0000 x86_64 GNU/Linux
