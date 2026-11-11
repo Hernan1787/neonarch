@@ -28,9 +28,37 @@ Silberschatz et al., *Operating System Concepts* 10th ed., ch. 2 (OS structures,
 The script saves (in `docs/evidence/tema-06/`): pacman configuration and signature policy, local database layout, `makepkg` output, the `pacman -U` transaction **showing our hook running**, `pacman -Qi/-Ql/-Qo/-Qkk neonarch-tools`, the package contents (`tar -tvf`), `pactree -d 2 i3-wm`, `pactree -r python`, the packages pacman *would* install for `xfce4-terminal` (`-Sp`, resolution without installing), and the hook firing on install and remove of `figlet` plus the log file.
 
 ## 4. Results
-<!-- key lines: hook output in install.txt / hook-install.txt, pacman -Qi neonarch-tools, pactree -->
+Measured on `neonarch-hernan`, pacman **7.1.0** / libalpm 16.0.1, 2026-11-10. Raw output: `docs/evidence/tema-06/`.
+
+**Configuration and databases** (`config.txt`, `database.txt`, `keyring.txt`)
+- `SigLevel = Required DatabaseOptional`, `LocalFileSigLevel = Optional`, repositories `[core]` and `[extra]`, `ParallelDownloads = 5`.
+- Local database: **416** installed packages, each one a directory `/var/lib/pacman/local/<name>-<version>/` with `desc`, `files`, `mtree` (and `install` when the package has a script); 12 MiB. Sync databases: `core.db` 128 KiB, `extra.db` 8.7 MiB.
+- Keyring: **183** trusted public keys (`pacman-key --list-keys`).
+
+**Our package** (`makepkg.txt`, `install.txt`, `qi.txt`, `ql.txt`, `qo.txt`, `qk.txt`, `pkg-contents.txt`)
+
+| Check | Result |
+|---|---|
+| `makepkg -f` | fakeroot → strip/purge → `.PKGINFO`, `.BUILDINFO`, `.MTREE` → `neonarch-tools-1.0.0-2-any.pkg.tar.zst` |
+| `pacman -Qi` | Version 1.0.0-2, Depends On `python`, 3 optional deps (all already installed), Installed Size 40.96 KiB, Install Reason *Explicitly installed*, Validated By *None* (local, unsigned) |
+| `pacman -Ql` | 11 entries: `/usr/bin/neon-{boost,info,mem,net,ps}` and `/usr/share/doc/neonarch-tools/README.md` |
+| `pacman -Qo /usr/bin/neon-info` | `is owned by neonarch-tools 1.0.0-2` |
+| `pacman -Qkk` | `11 total files, 0 altered files` (checked against the MTREE) |
+
+**Our hook in real transactions** (`install.txt`, `hook-install.txt`, `hook-remove.txt`, `hook-log.txt`): in every transaction pacman ran the hooks in order: snap-pac **pre** snapshot → package changes → `(2/3) NeonArch: logging transaction, checking orphans and kernel version... logged to /var/log/neonarch/pacman.log (1 package(s) in this transaction)` → snap-pac **post** snapshot. Log lines:
+```
+2026-11-10T23:41:36-06:00  1 package(s): neonarch-tools  | orphans=0
+2026-11-10T23:41:37-06:00  1 package(s): figlet  | orphans=0      (install)
+2026-11-10T23:41:37-06:00  1 package(s): figlet  | orphans=0      (removal)
+```
+
+**Dependency resolution** (`pactree-i3.txt`, `pactree-reverse.txt`, `sp-resolution.txt`): `pactree -d 2 i3-wm` shows i3 → libev, libxkbcommon-x11, pango (→ cairo, fontconfig…), etc.; `pactree -r -d 1 python` lists the installed packages that need Python (apparmor, fio, gdb…, and our own package); `pacman -Sp xfce4-terminal` resolved **9** packages to download (libxfce4util, xfconf, libgtop, libxfce4ui, vte-common, vte3, gtk-layer-shell…) without installing anything.
+
+**Problem found:** the first build packaged four **empty** commands, because the files had been emptied in the working tree by a terminal paste (`docs/instalacion.md`, problem #14). `pacman -Ql` alone did not reveal it, but `tar -tvf` of the package showed `0` bytes. We restored the files, bumped `pkgrel` to 2 and rebuilt; the evidence above is from the corrected package.
 
 ## 5. Interpretation
-<!-- What the hook proves (PostTransaction, NeedsTargets on stdin); why packaging our commands is
-better than copying them (pacman tracks the files: -Qo, -Qk, clean removal with -R); what the
-dependency tree shows. -->
+- **Why a package instead of copying files:** after `pacman -U`, pacman *owns* every file. It can tell which package a file belongs to (`-Qo`), verify that nothing was modified (`-Qkk` compares size, mode and checksums with the MTREE), upgrade it by bumping `pkgver`/`pkgrel`, and remove it cleanly with `-R`. A file copied by hand to `/usr/bin` is invisible to all of this.
+- **Hooks are the extension point of the package manager.** Our hook is `When = PostTransaction` with `NeedsTargets`, so pacman passes the transaction's package names on stdin. The ordering we observed (pre-snapshot, changes, our hook, post-snapshot) comes from the hook file names (`95-neonarch-report.hook` sorts before snap-pac's post hook). This connects Topic 6 with Topic 3: every transaction is now **reversible** with `snapper undochange <pre>..<post>`.
+- **Security:** packages from the repositories are verified against the 183 keys of the keyring (`SigLevel = Required`). Our local package shows *Validated By: None* because `LocalFileSigLevel = Optional` allows unsigned files installed with `-U`. In a real distribution we would sign it with our own key (`makepkg --sign`) and add that key to the keyring.
+- **Dependency resolution** is a graph problem: `-Sp` shows that installing one terminal would pull 9 packages, which is exactly why we chose minimal components (i3, xterm) in Layer 1.
+- **Lesson from the empty package:** verify the *artifact*, not only the metadata. `tar -tvf` revealed what `-Qi` and `-Ql` could not.
