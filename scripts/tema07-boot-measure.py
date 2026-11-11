@@ -31,6 +31,32 @@ def parse(out):
     return vals
 
 
+LOADER_GUID = "4a67b082-0a4c-41cf-b6c7-440b29bb8c4f"   # systemd-boot's EFI vendor GUID
+
+
+def efivar_usec(name):
+    """Read a LoaderTime*USec EFI variable written by systemd-boot (UTF-16 string, µs)."""
+    try:
+        with open(f"/sys/firmware/efi/efivars/{name}-{LOADER_GUID}", "rb") as f:
+            data = f.read()[4:]                       # first 4 bytes = EFI attributes
+        return int(data.decode("utf-16-le").rstrip("\x00"))
+    except (OSError, ValueError):
+        return None
+
+
+def add_loader_from_efi(vals):
+    """Some firmwares (VirtualBox OVMF) make systemd-analyze omit firmware/loader.
+    systemd-boot still records when it started (LoaderTimeInitUSec, measured from
+    CPU reset = firmware time) and when it handed over to the kernel (LoaderTimeExecUSec)."""
+    init, execu = efivar_usec("LoaderTimeInitUSec"), efivar_usec("LoaderTimeExecUSec")
+    if init and execu and not vals.get("loader"):
+        vals["firmware"] = init / 1e6
+        vals["loader"] = (execu - init) / 1e6
+        vals["total"] = sum(vals.get(p, 0.0) for p in ("firmware", "loader", "kernel", "initrd", "userspace"))
+        vals["source"] = "efivars"
+    return vals
+
+
 def run(*cmd):
     return subprocess.run(cmd, capture_output=True, text=True).stdout
 
@@ -42,7 +68,7 @@ def main():
     out = run("systemd-analyze", "time")
     if "Startup finished" not in out:
         sys.exit("boot not finished yet (systemd-analyze time): wait a few seconds and retry")
-    vals = parse(out)
+    vals = add_loader_from_efi(parse(out))
     rows = list(csv.DictReader(open(CSV))) if os.path.exists(CSV) else []
     if any(r["boot_id"] == boot_id for r in rows):
         print("this boot is already recorded; reboot and run again")
