@@ -68,8 +68,8 @@ bindsym $mod+9 workspace number $ws9
 # --- Hernán ---
 # Super+I: system stats HUD (neon-info, Layer 3 mandatory command) in a floating terminal.
 # -name (instance) instead of -class: the class must stay "XTerm" so the neon Xresources apply.
-bindsym $mod+i exec --no-startup-id xterm -name neon-hud -hold -e neon-info
-for_window [instance="neon-hud"] floating enable, resize set 900 760, move position center
+bindsym $mod+i exec --no-startup-id xterm -name neon-hud -fs 9 -hold -e neon-info
+for_window [instance="neon-hud"] floating enable, resize set 94 ppt 94 ppt, move position center
 # Super+B: "game mode" for the focused window (neon-boost: nice -5 + I/O priority, Topic 1)
 bindsym $mod+b exec --no-startup-id neon-boost --focused
 # Super+Shift+S: manual btrfs snapshot of / with snapper (Topic 3) + notification
