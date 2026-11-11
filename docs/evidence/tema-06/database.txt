@@ -1,5 +1,5 @@
 $ echo 'local db entries:' $(ls /var/lib/pacman/local | wc -l); ls /var/lib/pacman/local | head -3; ls /var/lib/pacman/local/$(ls /var/lib/pacman/local | grep '^bash-' | head -1); du -sh /var/lib/pacman/local /var/lib/pacman/sync; ls -l /var/lib/pacman/sync
-local db entries: 416
+local db entries: 417
 acl-2.4.0-1
 adwaita-cursors-51.0-1
 adwaita-fonts-51.0-2

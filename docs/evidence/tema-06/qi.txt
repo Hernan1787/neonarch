@@ -1,6 +1,6 @@
 $ pacman -Qi neonarch-tools
 Name            : neonarch-tools
-Version         : 1.0.0-1
+Version         : 1.0.0-2
 Description     : NeonArch own commands: neon-info, neon-ps, neon-boost, neon-net, neon-mem (read /proc, /sys and use syscalls)
 Architecture    : any
 URL             : https://github.com/Hernan1787/neonarch
@@ -15,10 +15,10 @@ Required By     : None
 Optional For    : None
 Conflicts With  : None
 Replaces        : None
-Installed Size  : 26.46 KiB
+Installed Size  : 40.96 KiB
 Packager        : Unknown Packager
-Build Date      : Tue 10 Nov 2026 11:38:47 PM CST
-Install Date    : Tue 10 Nov 2026 11:38:48 PM CST
+Build Date      : Tue 10 Nov 2026 11:41:35 PM CST
+Install Date    : Tue 10 Nov 2026 11:41:36 PM CST
 Install Reason  : Explicitly installed
 Install Script  : No
 Validated By    : None
