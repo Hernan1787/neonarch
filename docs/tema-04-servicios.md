@@ -42,10 +42,19 @@ The script:
 Output: `docs/evidence/tema-04/` (`cpu-with-quota.csv`, `cpu-without-quota.csv`, `oom-journal.txt`, `kill-journal.txt`, `summary.md`, …).
 
 ## 4. Results
-<!-- Paste docs/evidence/tema-04/summary.md and the key journal lines here -->
+Measured on `neonarch-hernan` (kernel 7.2.15-arch1-1, 2 vCPU, 4 GiB) on 2026-11-10. Raw data: `docs/evidence/tema-04/`.
+
+| Test | Result |
+|---|---|
+| Mean CPU of the cgroup while burning, `CPUQuota=20%` (25 one-second samples) | **19.8 %** of one core |
+| Mean CPU while burning, quota removed at runtime | **101.2 %** of one core |
+| `SIGUSR2` → allocate beyond `MemoryMax=64M` | OOM-killed inside the cgroup, **restarted automatically** (NRestarts 0 → 1) |
+| `SIGKILL` of the main process | **restarted automatically** after `RestartSec=3` (NRestarts 1 → 2) |
+
+Other evidence: `status.txt` (active, cgroup tree, timer), `cgls.txt`, `limits.txt` (`CPUQuotaPerSecUSec=200ms`, `MemoryMax=67108864`, `DynamicUser=yes`), `oom-journal.txt`, `kill-journal.txt`, `ps-user.txt` (the daemon runs as a dynamic, unprivileged user, not root).
 
 ## 5. Interpretation
-<!-- With the real data. Expected: with the quota the burn stays around 20 % of one core
-(the scheduler throttles the cgroup once it has used 20 ms of each 100 ms period); without it,
-close to 100 % of one core (it is single-threaded). The OOM kill happens inside the cgroup only,
-so the rest of the system is unaffected. -->
+- **CPU limit.** A single CPU-bound thread would use a whole core (101.2 % without limit; the extra 1.2 % is sampling jitter of the 1 s windows). With `CPUQuota=20%` systemd writes `cpu.max = 20000 100000` to the cgroup: in every 100 ms period the group may run 20 ms, then the scheduler **throttles** it until the next period. The measured 19.8 % matches the configured 20 % within 1 %. The process is not slowed by a lower priority (its nice is still 0): it is limited by **bandwidth control**, a hard cap that also applies when the CPU is otherwise idle.
+- **Memory limit.** `MemoryMax=64M` (`memory.max`) is enforced by the memory controller. When the daemon tried to go past it, reclaim could not free enough (no swap allowed: `MemorySwapMax=0`), so the kernel ran the OOM killer **only inside that cgroup**. The rest of the system was untouched, which is the isolation that cgroups provide.
+- **Restart policy.** In both failures (OOM kill, SIGKILL) the unit ended with a non-success result, so `Restart=on-failure` brought it back after 3 s, and `NRestarts` counts it. A clean `systemctl stop` would *not* restart it, and `StartLimitBurst=5` in 60 s prevents an infinite crash loop.
+- **Least privilege.** `DynamicUser=yes` plus `ProtectSystem=strict` means that even if the daemon were compromised it could only write to `/var/lib/neon-health`.

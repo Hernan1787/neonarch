@@ -26,9 +26,30 @@ sudo python3 scripts/tema01-experiment.py     # RUNS=3, 20 s per run
 - `neon-ps -p <PID>` during the run shows nice, policy and `CPU# 0` for the loops.
 
 ## 4. Results
-<!-- paste docs/evidence/tema-01/summary.md -->
+Measured on `neonarch-hernan`, kernel **7.2.15-arch1-1**, 2 vCPU, 2026-11-10. 3 runs × 20 s. Raw data: `docs/evidence/tema-01/`.
+
+**A. Three CPU-bound loops on CPU 0 (fair class, EEVDF)**
+
+| nice | weight | expected share | run 1 | run 2 | run 3 | mean |
+|---|---|---|---|---|---|---|
+| 0 | 1024 | 69.7 % | 69.1 % | 69.0 % | 69.1 % | **69.8 %** of the shared core* |
+| 5 | 335 | 22.8 % | 22.6 % | 22.5 % | 22.6 % | **22.8 %** |
+| 10 | 110 | 7.5 % | 7.4 % | 7.3 % | 7.4 % | **7.4 %** |
+
+\* the per-run columns are % of one core; the mean column is the *share* among the three (normalised to 100 %), which is what the weights predict.
+
+**B. SCHED_FIFO priority 10 vs SCHED_OTHER nice 0 on CPU 0**
+
+| run | SCHED_FIFO | SCHED_OTHER |
+|---|---|---|
+| 1 | 94.1 % | 5.0 % |
+| 2 | 94.0 % | 5.0 % |
+| 3 | 94.0 % | 5.0 % |
+
+Environment: `sched_rt_runtime_us = 1000000`, `sched_rt_period_us = 1000000`, `sched_autogroup_enabled = 1`.
 
 ## 5. Interpretation
-<!-- Compare measured vs expected shares. The small difference comes from other processes that
-also run on CPU 0 and from the 20 s window. Explain why nice 10 still gets CPU (no starvation in
-the fair class) but the normal loop almost starves next to SCHED_FIFO, and why it still gets ~5 %. -->
+- **A matches the theory to ±0.1 percentage points.** EEVDF does not give "priority" in the old sense: every runnable task gets a share proportional to its weight. Its virtual runtime advances at `delta × 1024 / weight`, so a nice 10 task's clock runs ~9.3× faster than a nice 0 task's, and it becomes *ineligible* sooner. Each nice step is ≈ ×1.25 in weight (≈ 10 % CPU difference between neighbours). Note that **nice 10 still runs** (7.4 %): the fair class never starves a task.
+- **B shows the separation between scheduling classes.** The `SCHED_FIFO` task always preempts the fair one: a real-time task runs until it blocks or yields, whatever its nice. The interesting part is *why the normal task still got exactly 5 %*. On this kernel `sched_rt_runtime_us = sched_rt_period_us = 1 000 000`, so the classic **RT throttling is disabled** (it used to reserve 5 % via 950 000/1 000 000). The 5 % now comes from the **fair server**, a `SCHED_DEADLINE` server added to Linux in the 6.12 series. On each CPU it reserves **50 ms of every 1 s** for fair-class tasks when real-time tasks would otherwise starve them. Verification: `sudo cat /sys/kernel/debug/sched/fair_server/cpu0/{runtime,period}` → `50000000` / `1000000000` ns.
+- The remaining ~1 % of CPU 0 is used by other processes and interrupts (kworkers, `neon-health`, i3).
+- **Limitations:** a 2-vCPU VM (the hypervisor can also steal time), 20 s windows, and only CPU-bound loops (I/O-bound tasks would also be affected by wake-up latency, which EEVDF improves with shorter virtual deadlines).
