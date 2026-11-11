@@ -8,6 +8,7 @@
 #    3. commands   symlink bin/* into ~/.local/bin                  [ln -s]
 #    4. system     copy units, hooks, udev rules, configs to /etc   [install]
 #    5. services   enable units listed in config/services.txt      [systemctl]
+#    6. snapper    create the btrfs snapshot config (Topic 3)       [snapper]
 #
 #  IDEMPOTENT: every step first checks the current state and only acts when
 #  something differs. Running it twice changes nothing the second time
@@ -156,8 +157,20 @@ stage_system() {
     if [[ -f $REPO_DIR/config/zram-generator.conf ]]; then
         deploy config/zram-generator.conf /etc/systemd/zram-generator.conf && RELOAD_SYSTEMD=1
     fi
-    for f in "$REPO_DIR"/systemd/scripts/*; do          # helper scripts executed by our units
-        deploy "systemd/scripts/${f##*/}" "/usr/local/lib/neonarch/${f##*/}" 755 || true
+    for f in "$REPO_DIR"/systemd/scripts/* "$REPO_DIR"/pacman/scripts/*; do   # helpers run by units/hooks
+        local rel="${f#"$REPO_DIR"/}"
+        deploy "$rel" "/usr/local/lib/neonarch/${f##*/}" 755 || true
+    done
+    for f in "$REPO_DIR"/security/sudoers.d/*; do      # validated with visudo before installing
+        local tmp; tmp=$(mktemp)        # visudo -c also checks owner/mode, so test a root:440 copy
+        sudo install -m 440 -o root -g root "$f" "$tmp"
+        if sudo visudo -cqf "$tmp"; then
+            sudo rm -f "$tmp"
+            deploy "security/sudoers.d/${f##*/}" "/etc/sudoers.d/${f##*/}" 440 || true
+        else
+            sudo rm -f "$tmp"
+            die "invalid sudoers syntax in security/sudoers.d/${f##*/}"
+        fi
     done
 
     if ((RELOAD_SYSTEMD)); then sudo systemctl daemon-reload; changed "systemctl daemon-reload"; fi
@@ -191,9 +204,22 @@ stage_services() {
 }
 
 # -----------------------------------------------------------------------------
+# 6. Snapper (Topic 3): create the snapshot configuration once
+# -----------------------------------------------------------------------------
+stage_snapper() {
+    step "Snapper (btrfs snapshots)"
+    if sudo snapper -c root get-config >/dev/null 2>&1; then
+        ok "snapper config 'root' exists"
+    else
+        "$REPO_DIR/scripts/tema03-setup-snapper.sh"
+        changed "snapper config 'root' created"
+    fi
+}
+
+# -----------------------------------------------------------------------------
 main() {
     local -a stages=("$@")
-    ((${#stages[@]})) || stages=(packages dotfiles commands system services)
+    ((${#stages[@]})) || stages=(packages dotfiles commands system services snapper)
     preflight
     local s
     for s in "${stages[@]}"; do

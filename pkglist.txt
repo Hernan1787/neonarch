@@ -35,6 +35,7 @@ libnotify           # notify-send, used by our commands/shortcuts
 feh                 # wallpaper
 xclip
 maim                # screenshots
+xdotool             # neon-boost --focused (PID of the focused window)
 ttf-dejavu
 noto-fonts
 ttf-jetbrains-mono-nerd
@@ -45,8 +46,10 @@ sysstat             # mpstat / pidstat / iostat
 strace
 fio                 # Topic 3: filesystem benchmark
 snapper             # Topic 3: automatic btrfs snapshots
+snap-pac            # Topic 3+6: pacman pre/post snapshots (ALPM hook)
 zram-generator      # Topic 2: compressed swap in RAM
 pacman-contrib      # Topic 6: pactree, checkupdates
+lz4                 # Topic 7: faster initramfs compression
 nftables            # Topic 9: firewall
 openssh             # Topic 9: hardened SSH
 nmap                # Topic 9: scan from the other VM

@@ -3,3 +3,9 @@
 # Each topic adds its units here when they exist in systemd/system/.
 system  NetworkManager.service
 system  systemd-boot-update.service
+# Topic 4: own service + timer
+system  neon-health.service
+system  neon-health-report.timer
+# Topic 3: automatic btrfs snapshots
+system  snapper-timeline.timer
+system  snapper-cleanup.timer
