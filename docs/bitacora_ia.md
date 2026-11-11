@@ -79,6 +79,18 @@
 | Validated / corrected / discarded | *(each owner fills in after running on their VM: what worked, what was changed, and that they can explain every line)* |
 | How it was validated | Before delivery: `shellcheck` on every script, `i3 -C` on the i3 config, `visudo -c` on the sudoers drop-ins, `nft -c` on the firewall, local runs of `neon-ps`, `neon-boost`, `neon-net`, `neon-mem`, the `neon-health` daemon (CPU burn and memory hog) and `tema01-experiment.py` (measured shares 69.9/22.8/7.3 % vs expected 69.7/22.8/7.5 %). Final validation = the measurements on the Arch VMs. |
 
+### Entry 7 — ⚠️ AI error #4
+| Field | Content |
+|---|---|
+| Date · member | 2026-11-10 · Hernán Alonso Gutiérrez Quesada |
+| Tool | Claude (Anthropic) |
+| Component | Topic 3 (`scripts/tema03-fio-bench.sh`) |
+| Purpose | Fair btrfs vs ext4 benchmark inside one VM |
+| Summarised query | Part of entry 6: "benchmark btrfs against ext4 with fio". |
+| Result obtained | The ext4 side used a loop image mounted with `mount -o loop` (buffered loop device). |
+| Validated / corrected / discarded | **Corrected.** The first run gave ext4 5785 MiB/s sequential read and 217 914 random-read IOPS (71 µs): impossible for the virtual disk, which gave btrfs 1826 MiB/s and 26 683 IOPS. `O_DIRECT` only bypassed ext4's cache; the loop driver still read the image through the page cache, so ext4 was measuring **RAM**. Fixed by creating the loop device with `losetup --direct-io=on`. The biased JSONs are kept in `docs/evidence/tema-03/fio/discarded-buffered-loop/` as evidence of the problem. |
+| How it was validated | Sanity check of the numbers against the hardware (RAM-speed results on a disk benchmark), `losetup -l` showing `DIO 1` in the re-run (`setup-ext4.txt`). |
+
 ---
 
 ## Components built without AI
