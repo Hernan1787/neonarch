@@ -84,7 +84,11 @@ neonarch/
 
 | Command | What it does | OS interfaces used | Author |
 |---|---|---|---|
-| `neon-info` | System report: kernel, uptime, CPU, GPU/NPU + driver, memory/swap/zram, processes, scheduler, root FS. `--sources` shows the interface behind each value; `--json` for scripts. | `/proc/{meminfo,swaps,uptime,loadavg,cpuinfo,[pid]/stat,self/mounts}`, `/sys/{bus/pci,block/zram*,devices/system/cpu,class/accel,firmware/efi}`, `uname(2)`, `statvfs(2)`, `sched_getscheduler(2)`, `sched_getaffinity(2)` | Royner Baltodano Sánchez |
+| `neon-info` | System report: kernel, uptime, CPU, GPU/NPU + driver, memory/swap/zram, processes, scheduler, root FS. `--sources` shows the interface behind each value; `--json` for scripts. | `/proc/{meminfo,swaps,uptime,loadavg,cpuinfo,[pid]/stat,self/mounts}`, `/sys/{bus/pci,block/zram*,devices/system/cpu,class/accel,firmware/efi}`, `uname(2)`, `statvfs(2)`, `sched_getscheduler(2)`, `sched_getaffinity(2)` | Hernán Alonso Gutiérrez Quesada |
+| `neon-ps` | Process tool for Topic 1: lists PID, PPID, state, nice, policy, RT priority, CPU and %CPU; changes nice, scheduling policy (OTHER/BATCH/IDLE/FIFO/RR) and CPU affinity. | `/proc/[pid]/stat`, `getpriority/setpriority(2)`, `sched_setscheduler(2)`, `sched_getparam(2)`, `sched_setaffinity(2)` | Hernán Alonso Gutiérrez Quesada |
+| `neon-boost` | "Game mode": nice −5 for every thread of a process + best-effort I/O level 0; `--undo`; `--focused` boosts the focused window (shortcut `Super+B`). | `/proc/[pid]/task`, `setpriority(2)`, `ioprio_set(2)` | Hernán Alonso Gutiérrez Quesada |
+| `neon-net` | Interfaces with state, IPv4, MAC, MTU, speed and live RX/TX rates; `-w` to watch. | `/proc/net/dev`, `/sys/class/net/*`, `ioctl(SIOCGIFADDR)` | Hernán Alonso Gutiérrez Quesada |
+| `neon-mem` | Real-time memory monitor for Topic 2: RAM, swap devices and priorities, zram compression ratio, swap-in/out and major faults per second, top processes by page faults. | `/proc/meminfo`, `/proc/swaps`, `/proc/vmstat`, `/proc/[pid]/stat`, `/sys/block/zram*/mm_stat` | Royner Baltodano Sánchez |
 
 ## Project status
 

@@ -67,6 +67,18 @@
 | Validated / corrected / discarded | **Discarded.** In the VirtualBox VM (VMSVGA, no 3D) Alacritty never drew a window: each `Super+Enter` left a hung process (21 of them, RAM 178 MiB → 1.6 GiB), forcing `LIBGL_ALWAYS_SOFTWARE=1` did not help and the X display ended up black. Replaced by xterm, rendered on the CPU. |
 | How it was validated | From tty2: `sudo showkey -k` (Super = keycode 125 arrives, so the shortcut was fine), `pgrep -a alacritty` (21 processes), `neon-info --short` (RAM growth). After switching to xterm the shortcut opens a terminal immediately. |
 
+### Entry 6
+| Field | Content |
+|---|---|
+| Date · member | 2026-11-02 / 2026-11-09 · Hernán Alonso Gutiérrez Quesada |
+| Tool | Claude (Anthropic) |
+| Component | Layer 2 Topics 1, 3, 4, 6, 7 (Hernán) and first drafts for Topics 2, 9 (Royner); Layer 3 commands `neon-ps`, `neon-boost`, `neon-net`, `neon-mem`; shortcuts |
+| Purpose | Generate implementation and measurement scripts and evidence-sheet skeletons |
+| Summarised query | "Prepare each topic so that it can be executed and measured on the VM: configuration, measurement script and evidence sheet." |
+| Result obtained | `systemd/` units + `neon-health` daemon, snapper/fio/rollback scripts, `tema01-experiment.py`, Topic 7 boot measurement/optimisation, pacman hook + PKGBUILD, zram/swap config, nftables/SSH/sudoers/ACL setup and tests. |
+| Validated / corrected / discarded | *(each owner fills in after running on their VM: what worked, what was changed, and that they can explain every line)* |
+| How it was validated | Before delivery: `shellcheck` on every script, `i3 -C` on the i3 config, `visudo -c` on the sudoers drop-ins, `nft -c` on the firewall, local runs of `neon-ps`, `neon-boost`, `neon-net`, `neon-mem`, the `neon-health` daemon (CPU burn and memory hog) and `tema01-experiment.py` (measured shares 69.9/22.8/7.3 % vs expected 69.7/22.8/7.5 %). Final validation = the measurements on the Arch VMs. |
+
 ---
 
 ## Components built without AI
