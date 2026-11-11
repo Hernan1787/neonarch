@@ -42,7 +42,8 @@ can defend them individually.
 | Component | Owner | Support | Repository path |
 |---|---|---|---|
 | Mandatory command `neon-info` | Hernán Alonso Gutiérrez Quesada | — | `bin/neon-info` |
-| Free commands 1 & 2 | Hernán Alonso Gutiérrez Quesada | — | `bin/` |
-| Free commands 3 & 4 | Royner Baltodano Sánchez | — | `bin/` |
+| Free commands `neon-ps`, `neon-boost`, `neon-net` | Hernán Alonso Gutiérrez Quesada | — | `bin/` |
+| Free commands `neon-mem` + one more | Royner Baltodano Sánchez | Hernán Alonso Gutiérrez Quesada (`neon-mem` draft) | `bin/` |
+| Package `neonarch-tools` (all commands) | Hernán Alonso Gutiérrez Quesada | — | `pacman/pkgbuild/neonarch-tools/` |
 | Mandatory shortcuts | Hernán Alonso Gutiérrez Quesada | — | `dotfiles/i3/config` |
 | Free shortcuts (3 each) | Each member | — | `dotfiles/i3/config`, `docs/cheatsheet.md` |

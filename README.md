@@ -37,7 +37,7 @@ Every component exists to demonstrate an operating-systems concept, and each one
 
 ```bash
 sudo pacman -S --needed git
-git clone https://github.com/<team>/neonarch.git ~/neonarch
+git clone https://github.com/Hernan1787/neonarch.git ~/neonarch
 cd ~/neonarch
 ./scripts/collect-install-evidence.sh   # Layer 1 evidence of your manual install
 ./install.sh                            # apply NeonArch

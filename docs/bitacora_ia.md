@@ -40,7 +40,7 @@
 | Purpose | Generate a first version of the repository structure and scripts |
 | Summarised query | "Build the repository skeleton, the installation guide with the reason for each command, an idempotent bootstrap and the mandatory command." |
 | Result obtained | `docs/instalacion.md`, `install.sh`, `pkglist.txt`, i3/alacritty/rofi dotfiles, `bin/neon-info`, evidence-sheet templates. |
-| Validated / corrected / discarded | *(fill in after testing on the VMs: what worked, what had to be changed)* |
+| Validated / corrected / discarded | **Partly corrected after running it on the VM (2026-10-28).** Worked as generated: the manual-install guide (all 14 problems found were our own typos or environment issues, logged in `docs/instalacion.md`), `install.sh` (idempotent on the real VM: 21 changes, then 0), `neon-info` (correctly reported the `vmwgfx` driver of the virtual GPU). Corrected: the i3 config (inline comments, AI error #2), the terminal (Alacritty → xterm, AI error #3), bracketed paste in `.bashrc`, xterm copy-on-select (pasting terminal output into bash emptied four files, problem #14), the `Super+I` window class (theme not applied). |
 | How it was validated | `shellcheck` on all scripts; `install.sh` run twice in a test environment → second run reported 0 changes (idempotent); `neon-info` executed and each value compared with `free -m`, `lscpu`, `lspci -k`, `findmnt /`. *(Pending: execution on both Arch VMs, logs in `logs/`.)* |
 
 ### Entry 4 — ⚠️ AI error #2
@@ -76,7 +76,7 @@
 | Purpose | Generate implementation and measurement scripts and evidence-sheet skeletons |
 | Summarised query | "Prepare each topic so that it can be executed and measured on the VM: configuration, measurement script and evidence sheet." |
 | Result obtained | `systemd/` units + `neon-health` daemon, snapper/fio/rollback scripts, `tema01-experiment.py`, Topic 7 boot measurement/optimisation, pacman hook + PKGBUILD, zram/swap config, nftables/SSH/sudoers/ACL setup and tests. |
-| Validated / corrected / discarded | *(each owner fills in after running on their VM: what worked, what was changed, and that they can explain every line)* |
+| Validated / corrected / discarded | **Hernán's topics, run on `neonarch-hernan` (2026-11-10/11):** Topics 1 and 4 worked as generated, and the measurements matched the theory (shares ±0.1 pp; CPUQuota 19.8 %). Corrected: the Topic 3 benchmark (buffered loop device, AI error #4), the rollback demo (bash hash, AI error #5), the Topic 1 expectation "FIFO ≤ 95 % by RT throttling" (on kernel 7.2 the 5 % comes from the fair server; verified in debugfs), and Topic 7: the boot measurement could not see the loader phase in VirtualBox, and the first optimisation (lz4) made the boot slower, so a second variant was added and the defaults were kept. Package `pkgrel` bumped to 2 after the empty-files incident. *Royner fills in his part for Topics 2 and 9.* |
 | How it was validated | Before delivery: `shellcheck` on every script, `i3 -C` on the i3 config, `visudo -c` on the sudoers drop-ins, `nft -c` on the firewall, local runs of `neon-ps`, `neon-boost`, `neon-net`, `neon-mem`, the `neon-health` daemon (CPU burn and memory hog) and `tema01-experiment.py` (measured shares 69.9/22.8/7.3 % vs expected 69.7/22.8/7.5 %). Final validation = the measurements on the Arch VMs. |
 
 ### Entry 7 — ⚠️ AI error #4

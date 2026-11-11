@@ -273,7 +273,7 @@ sudo bootctl status         # Firmware: UEFI · Current Entry: neonarch.conf · 
 
 ```bash
 sudo pacman -S --needed git
-git clone https://github.com/<team>/neonarch.git ~/neonarch
+git clone https://github.com/Hernan1787/neonarch.git ~/neonarch
 cd ~/neonarch
 ./scripts/collect-install-evidence.sh
 ```
