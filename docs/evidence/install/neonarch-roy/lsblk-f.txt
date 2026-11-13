@@ -1,0 +1,11 @@
+$ lsblk -f
+# collected 2026-11-11T21:51:17-06:00 on neonarch-roy by roy
+NAME   FSTYPE FSVER LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+sda                                                                           
+├─sda1 vfat   FAT32 EFI   7434-A956                             990.7M     3% /boot
+└─sda2 btrfs        ROOT  edd02f98-cb50-44d5-9084-39dbd5692890   36.7G     5% /var/log
+                                                                              /var/cache/pacman/pkg
+                                                                              /home
+                                                                              /swap
+                                                                              /.snapshots
+                                                                              /

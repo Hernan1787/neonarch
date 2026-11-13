@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# =============================================================================
+# neonarch-clean — NeonArch safe cleanup
+#
+# Usage: neonarch-clean [--all] [--pacman] [--journal] [--snapshots]
+#                       [--cache] [--orphans] [--dry-run] [--yes] [--help]
+#
+# Default: dry-run (nothing is deleted). Use --yes to apply.
+# With no flags, behaves like --all --dry-run.
+# =============================================================================
+set -euo pipefail
+
+DRY=1
+DO_PACMAN=0; DO_JOURNAL=0; DO_SNAPSHOTS=0; DO_CACHE=0; DO_ORPHANS=0
+ANY=0
+for arg in "$@"; do
+    case "$arg" in
+        --help|-h)   sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        --dry-run)   DRY=1 ;;
+        --yes|-y)    DRY=0 ;;
+        --pacman)    DO_PACMAN=1; ANY=1 ;;
+        --journal)   DO_JOURNAL=1; ANY=1 ;;
+        --snapshots) DO_SNAPSHOTS=1; ANY=1 ;;
+        --cache)     DO_CACHE=1; ANY=1 ;;
+        --orphans)   DO_ORPHANS=1; ANY=1 ;;
+        --all)       DO_PACMAN=1; DO_JOURNAL=1; DO_SNAPSHOTS=1; DO_CACHE=1; DO_ORPHANS=1; ANY=1 ;;
+        *) echo "unknown option: $arg" >&2; exit 1 ;;
+    esac
+done
+(( ANY )) || { DO_PACMAN=1; DO_JOURNAL=1; DO_SNAPSHOTS=1; DO_CACHE=1; DO_ORPHANS=1; }
+
+c_plan=$'\e[36m'; c_skip=$'\e[33m'; c_ok=$'\e[32m'; c_0=$'\e[0m'
+plan() { printf '  %s[plan]%s %s\n' "$c_plan" "$c_0" "$*"; }
+skip() { printf '  %s[skip]%s %s\n' "$c_skip" "$c_0" "$*"; }
+done_() { printf '  %s[ok]%s   %s\n'   "$c_ok"   "$c_0" "$*"; }
+
+MODE=$([[ $DRY == 1 ]] && echo "DRY RUN (nothing will be deleted)" || echo "APPLY")
+printf 'NeonArch clean — %s\n\n' "$MODE"
+
+# Record btrfs usage before
+BEFORE=""
+command -v btrfs >/dev/null && BEFORE=$(btrfs filesystem usage -b / 2>/dev/null | awk '/Used:/{print $2}')
+
+# -----------------------------------------------------------------------------
+if (( DO_PACMAN )); then
+    SIZE=$(du -sh /var/cache/pacman/pkg 2>/dev/null | awk '{print $1}')
+    plan "pacman: cache is $SIZE (pacman -Sc removes uninstalled packages)"
+    if (( ! DRY )); then
+        sudo pacman -Sc --noconfirm >/dev/null
+        done_ "pacman cache cleaned"
+    fi
+fi
+
+# -----------------------------------------------------------------------------
+if (( DO_JOURNAL )); then
+    SIZE=$(journalctl --disk-usage 2>/dev/null | awk '{print $7, $8}')
+    plan "journal: $SIZE (vacuum older than 2 weeks)"
+    if (( ! DRY )); then
+        sudo journalctl --vacuum-time=2weeks >/dev/null
+        done_ "journal vacuumed"
+    fi
+fi
+
+# -----------------------------------------------------------------------------
+if (( DO_SNAPSHOTS )); then
+    if [[ -d /.snapshots ]]; then
+        OLD=$(find /.snapshots -maxdepth 1 -mindepth 1 -type d -mtime +30 2>/dev/null)
+        if [[ -n "$OLD" ]]; then
+            plan "snapshots: would remove $(echo "$OLD" | wc -l) snapshot(s) older than 30 days:"
+            echo "$OLD" | sed 's/^/         /'
+            if (( ! DRY )); then
+                echo "$OLD" | while read -r s; do sudo btrfs subvolume delete "$s" >/dev/null; done
+                done_ "old snapshots removed"
+            fi
+        else
+            skip "snapshots: none older than 30 days"
+        fi
+    else
+        skip "snapshots: /.snapshots not mounted"
+    fi
+fi
+
+# -----------------------------------------------------------------------------
+if (( DO_CACHE )); then
+    if [[ -d $HOME/.cache ]]; then
+        SIZE=$(du -sh "$HOME/.cache" 2>/dev/null | awk '{print $1}')
+        plan "cache: ~/.cache is $SIZE (thumbnails and tmp older than 30 days)"
+        if (( ! DRY )); then
+            find "$HOME/.cache" -type f -atime +30 -delete 2>/dev/null || true
+            find "$HOME/.cache" -type d -empty -delete 2>/dev/null || true
+            done_ "~/.cache pruned"
+        fi
+    fi
+fi
+
+# -----------------------------------------------------------------------------
+if (( DO_ORPHANS )); then
+    ORPH=$(pacman -Qtdq 2>/dev/null || true)
+    if [[ -n "$ORPH" ]]; then
+        skip "orphans: $(echo "$ORPH" | wc -l) package(s) — NOT removed automatically:"
+        echo "$ORPH" | sed 's/^/         /'
+        echo "         (use: sudo pacman -Rns \$(pacman -Qtdq))"
+    else
+        done_ "orphans: none"
+    fi
+fi
+
+# -----------------------------------------------------------------------------
+if command -v btrfs >/dev/null && [[ -n "$BEFORE" ]]; then
+    AFTER=$(btrfs filesystem usage -b / 2>/dev/null | awk '/Used:/{print $2}')
+    SAVED=$(( (BEFORE - AFTER) / 1024 / 1024 ))
+    printf '\nbtrfs / used: %d MiB → %d MiB (saved %d MiB)\n' \
+        $((BEFORE/1024/1024)) $((AFTER/1024/1024)) "$SAVED"
+fi
+
+(( DRY )) && echo "Run with --yes to apply."
+exit 0

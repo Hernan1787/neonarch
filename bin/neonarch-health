@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# =============================================================================
+# neonarch-health — NeonArch system health check
+#
+# Usage: neonarch-health [--help] [--quiet]
+#   --quiet   only show warn/fail
+#
+# Exit codes: 0 = all ok, 1 = warnings, 2 = failures
+# =============================================================================
+set -uo pipefail
+
+QUIET=0
+for arg in "$@"; do
+    case "$arg" in
+        --help|-h) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        --quiet|-q) QUIET=1 ;;
+        *) echo "unknown option: $arg" >&2; exit 1 ;;
+    esac
+done
+
+FAILS=0; WARNS=0
+c_ok=$'\e[32m'; c_warn=$'\e[33m'; c_fail=$'\e[31m'; c_info=$'\e[36m'; c_0=$'\e[0m'
+ok()   { (( QUIET )) || printf '  %s[ok]%s    %s\n'   "$c_ok"   "$c_0" "$*"; }
+info() { (( QUIET )) || printf '  %s[info]%s  %s\n'   "$c_info" "$c_0" "$*"; }
+warn() { WARNS=$((WARNS+1)); printf '  %s[warn]%s  %s\n' "$c_warn" "$c_0" "$*"; }
+fail() { FAILS=$((FAILS+1)); printf '  %s[fail]%s  %s\n' "$c_fail" "$c_0" "$*"; }
+
+printf 'NeonArch health check — %s — %s\n\n' "$(hostname)" "$(date -Iseconds)"
+
+# -----------------------------------------------------------------------------
+# Kernel vs modules
+KVER=$(uname -r)
+if [[ -d /lib/modules/$KVER ]]; then
+    ok "Kernel $KVER matches /lib/modules"
+else
+    fail "Kernel $KVER has no modules in /lib/modules (reboot or reinstall linux)"
+fi
+
+# -----------------------------------------------------------------------------
+# zram
+if lsmod | grep -q '^zram'; then
+    ok "zram module loaded"
+    if swapon --show | grep -q zram; then
+        ok "zram0 active as swap"
+    else
+        warn "zram module loaded but zram0 not active as swap"
+    fi
+else
+    warn "zram module not loaded"
+fi
+
+# -----------------------------------------------------------------------------
+# Swap
+if swapon --show | grep -q .; then
+    ok "swap active"
+    info "swap: $(swapon --show --noheadings | awk '{print $1" ("$4")"}' | paste -sd', ')"
+else
+    warn "no swap active"
+fi
+info "memory: $(free -h | awk '/Mem:/{print $3" used / "$2" total, "$7" available"}')"
+
+# -----------------------------------------------------------------------------
+# btrfs usage
+if command -v btrfs >/dev/null; then
+    USAGE=$(btrfs filesystem usage -b / 2>/dev/null | awk '/Used:/{u=$2} /Device size:/{s=$3} END{printf "%d", (u*100)/s}')
+    if [[ -n "${USAGE:-}" ]]; then
+        if (( USAGE >= 95 )); then
+            fail "btrfs / usage: ${USAGE}%"
+        elif (( USAGE >= 85 )); then
+            warn "btrfs / usage: ${USAGE}%"
+        else
+            ok "btrfs / usage: ${USAGE}%"
+        fi
+    fi
+fi
+
+# -----------------------------------------------------------------------------
+# failed systemd units
+FAILED=$(systemctl --failed --no-legend --no-pager 2>/dev/null | wc -l)
+if (( FAILED == 0 )); then
+    ok "no failed systemd units"
+else
+    fail "$FAILED failed systemd unit(s):"
+    systemctl --failed --no-legend --no-pager 2>/dev/null | sed 's/^/         /'
+fi
+
+# -----------------------------------------------------------------------------
+# snapshots
+if [[ -d /.snapshots ]]; then
+    N=$(find /.snapshots -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+    info "$N snapshot(s) in /.snapshots"
+fi
+
+# -----------------------------------------------------------------------------
+# orphan packages
+if command -v pacman >/dev/null; then
+    ORPH=$(pacman -Qtdq 2>/dev/null | wc -l)
+    if (( ORPH > 0 )); then
+        warn "$ORPH orphan package(s): $(pacman -Qtdq 2>/dev/null | paste -sd', ')"
+    else
+        ok "no orphan packages"
+    fi
+fi
+
+# -----------------------------------------------------------------------------
+# pending updates
+if command -v checkupdates >/dev/null; then
+    UPD=$(checkupdates 2>/dev/null | wc -l)
+    info "$UPD package update(s) available"
+fi
+
+# -----------------------------------------------------------------------------
+# journal errors since boot
+JERR=$(journalctl -p err -b --no-pager -q 2>/dev/null | wc -l)
+if (( JERR == 0 )); then
+    ok "no errors in journal since boot"
+else
+    warn "$JERR error line(s) in journal since boot"
+fi
+
+# -----------------------------------------------------------------------------
+# temperature (if sensors available)
+if command -v sensors >/dev/null; then
+    T=$(sensors 2>/dev/null | awk '/^temp1:/{print $2; exit}')
+    [[ -n "$T" ]] && info "CPU temp: $T"
+fi
+
+# -----------------------------------------------------------------------------
+printf '\nSummary: %d fail, %d warn\n' "$FAILS" "$WARNS"
+(( FAILS > 0 )) && exit 2
+(( WARNS > 0 )) && exit 1
+exit 0

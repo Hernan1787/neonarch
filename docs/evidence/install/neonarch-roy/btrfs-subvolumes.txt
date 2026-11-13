@@ -1,0 +1,10 @@
+$ sudo btrfs subvolume list /
+# collected 2026-11-11T21:51:17-06:00 on neonarch-roy by roy
+ID 256 gen 54 top level 5 path @
+ID 257 gen 56 top level 5 path @home
+ID 258 gen 10 top level 5 path @snapshots
+ID 259 gen 56 top level 5 path @var_log
+ID 260 gen 41 top level 5 path @pkg
+ID 261 gen 11 top level 5 path @swap
+ID 262 gen 27 top level 256 path var/lib/portables
+ID 263 gen 27 top level 256 path var/lib/machines

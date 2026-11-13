@@ -1,0 +1,3 @@
+$ cat /sys/firmware/efi/fw_platform_size
+# collected 2026-11-11T21:51:17-06:00 on neonarch-roy by roy
+64

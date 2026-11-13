@@ -1,0 +1,3 @@
+$ findmnt -no SOURCE,FSTYPE,OPTIONS /
+# collected 2026-11-11T21:51:17-06:00 on neonarch-roy by roy
+/dev/sda2[/@] btrfs rw,noatime,compress=zstd:1,space_cache=v2,subvolid=256,subvol=/@

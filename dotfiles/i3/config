@@ -143,3 +143,8 @@ bar {
 
 exec --no-startup-id xsetroot -solid "#0a0a12"
 exec --no-startup-id dunst
+
+# NeonArch — atajos propios
+bindsym $mod+Shift+l exec --no-startup-id i3lock -c 000000
+bindsym $mod+Shift+p exec --no-startup-id mkdir -p ~/capturas && maim -s ~/capturas/$(date +%F-%H%M%S).png
+bindsym $mod+Shift+k exec --no-startup-id xterm -e neonarch-calc

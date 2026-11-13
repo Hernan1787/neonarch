@@ -1,0 +1,27 @@
+$ cat /etc/fstab
+# collected 2026-11-11T21:51:17-06:00 on neonarch-roy by roy
+# Static information about the filesystems.
+# See fstab(5) for details.
+
+# <file system> <dir> <type> <options> <dump> <pass>
+# /dev/sda2 LABEL=ROOT
+UUID=edd02f98-cb50-44d5-9084-39dbd5692890	/         	btrfs     	rw,noatime,compress=zstd:1,space_cache=v2,subvol=/@	0 0
+
+# /dev/sda2 LABEL=ROOT
+UUID=edd02f98-cb50-44d5-9084-39dbd5692890	/home     	btrfs     	rw,noatime,compress=zstd:1,space_cache=v2,subvol=/@home	0 0
+
+# /dev/sda2 LABEL=ROOT
+UUID=edd02f98-cb50-44d5-9084-39dbd5692890	/.snapshots	btrfs     	rw,noatime,compress=zstd:1,space_cache=v2,subvol=/@snapshots	0 0
+
+# /dev/sda2 LABEL=ROOT
+UUID=edd02f98-cb50-44d5-9084-39dbd5692890	/var/log  	btrfs     	rw,noatime,compress=zstd:1,space_cache=v2,subvol=/@var_log	0 0
+
+# /dev/sda2 LABEL=ROOT
+UUID=edd02f98-cb50-44d5-9084-39dbd5692890	/var/cache/pacman/pkg	btrfs     	rw,noatime,compress=zstd:1,space_cache=v2,subvol=/@pkg	0 0
+
+# /dev/sda2 LABEL=ROOT
+UUID=edd02f98-cb50-44d5-9084-39dbd5692890	/swap     	btrfs     	rw,noatime,compress=zstd:1,space_cache=v2,subvol=/@swap	0 0
+
+# /dev/sda1 LABEL=EFI
+UUID=7434-A956      	/boot     	vfat      	rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro	0 2
+

@@ -1,0 +1,51 @@
+
+[1;38;2;0;240;255m==> Preflight[0m
+  [32m[ok][0m      Arch Linux, user=roy, host=neonarch-roy, repo=/home/roy/neonarch
+  [32m[ok][0m      log file: logs/install-neonarch-roy-20261111-215421.log
+
+[1;38;2;0;240;255m==> Packages (pkglist.txt)[0m
+  [32m[ok][0m      all 47 packages already installed
+
+[1;38;2;0;240;255m==> Dotfiles[0m
+  [32m[ok][0m      /home/roy/.bashrc
+  [32m[ok][0m      /home/roy/.bash_profile
+  [32m[ok][0m      /home/roy/.xinitrc
+  [32m[ok][0m      /home/roy/.config/i3/config
+  [32m[ok][0m      /home/roy/.config/i3status/config
+  [32m[ok][0m      /home/roy/.Xresources
+  [32m[ok][0m      /home/roy/.config/rofi/config.rasi
+  [32m[ok][0m      /home/roy/.config/dunst/dunstrc
+
+[1;38;2;0;240;255m==> Own commands (bin/ -> ~/.local/bin)[0m
+  [32m[ok][0m      /home/roy/.local/bin/neon-boost
+  [32m[ok][0m      /home/roy/.local/bin/neon-info
+  [32m[ok][0m      /home/roy/.local/bin/neon-mem
+  [32m[ok][0m      /home/roy/.local/bin/neon-net
+  [32m[ok][0m      /home/roy/.local/bin/neon-ps
+
+[1;38;2;0;240;255m==> System files[0m
+  [32m[ok][0m      /etc/systemd/system/neon-health-report.service
+  [32m[ok][0m      /etc/systemd/system/neon-health.service
+  [32m[ok][0m      /etc/systemd/system/neon-health-report.timer
+  [32m[ok][0m      /etc/pacman.d/hooks/95-neonarch-report.hook
+  [32m[ok][0m      /etc/sysctl.d/99-neonarch-zram.conf
+  [32m[ok][0m      /etc/systemd/zram-generator.conf
+  [32m[ok][0m      /usr/local/lib/neonarch/neon-health
+  [32m[ok][0m      /usr/local/lib/neonarch/pacman-report
+  [32m[ok][0m      /etc/sudoers.d/50-neonarch-boost
+  [32m[ok][0m      /etc/sudoers.d/60-neonarch-operator
+
+[1;38;2;0;240;255m==> Services (config/services.txt)[0m
+  [32m[ok][0m      NetworkManager.service enabled
+  [32m[ok][0m      systemd-boot-update.service enabled
+  [32m[ok][0m      neon-health.service enabled
+  [32m[ok][0m      neon-health-report.timer enabled
+  [32m[ok][0m      snapper-timeline.timer enabled
+  [32m[ok][0m      snapper-cleanup.timer enabled
+
+[1;38;2;0;240;255m==> Snapper (btrfs snapshots)[0m
+  [32m[ok][0m      snapper config 'root' exists
+
+[1;38;2;0;240;255m==> Summary[0m
+  [32m[ok][0m      system already up to date: 0 changes (idempotent run)
+  log: logs/install-neonarch-roy-20261111-215421.log

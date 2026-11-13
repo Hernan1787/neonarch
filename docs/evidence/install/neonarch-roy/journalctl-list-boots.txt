@@ -1,0 +1,5 @@
+$ journalctl --list-boots --no-pager
+# collected 2026-11-11T21:51:17-06:00 on neonarch-roy by roy
+IDX BOOT ID                          FIRST ENTRY                 LAST ENTRY
+ -1 e3d3afad72154f9bb1313d138dc2541f Wed 2026-11-11 21:44:27 CST Wed 2026-11-11 21:45:10 CST
+  0 bda27e8114b64fc087d8c876ddd22901 Wed 2026-11-11 21:45:25 CST Wed 2026-11-11 21:51:17 CST

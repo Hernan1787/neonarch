@@ -1,0 +1,3 @@
+NAME           TYPE        SIZE USED PRIO
+/dev/zram0     partition 969.5M   0B  100
+/swap/swapfile file          2G  68M   -1

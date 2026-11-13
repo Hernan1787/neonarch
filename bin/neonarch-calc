@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# neonarch-calc — calculadora rápida en terminal
+set -uo pipefail
+while true; do
+    read -rp 'calc> ' expr || break
+    [[ -z "$expr" ]] && break
+    [[ "$expr" == "q" || "$expr" == "quit" || "$expr" == "exit" ]] && break
+    python3 -c "print(eval('''$expr'''))" 2>&1 || echo "error de sintaxis"
+done

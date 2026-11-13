@@ -1,0 +1,16 @@
+=== free -h ===
+               total        used        free      shared  buff/cache   available
+Mem:           1.9Gi       312Mi       1.7Gi        24Ki        98Mi       1.6Gi
+Swap:          2.0Gi        68Mi       1.9Gi
+
+=== swapon ===
+NAME           TYPE SIZE  USED PRIO
+/swap/swapfile file   2G 68.6M   -1
+
+=== /proc/swaps ===
+Filename				Type		Size		Used		Priority
+/swap/swapfile                          file		2097148		70296		-1
+
+=== zramctl ===
+NAME       ALGORITHM DISKSIZE DATA COMPR TOTAL STREAMS MOUNTPOINT
+/dev/zram0 zstd        969.5M   4K   64B   20K         

@@ -1,0 +1,17 @@
+
+[1;38;2;0;240;255m==> Preflight[0m
+  [32m[ok][0m      Arch Linux, user=roy, host=neonarch-roy, repo=/home/roy/neonarch
+  [32m[ok][0m      log file: logs/install-neonarch-roy-20261112-184008.log
+
+[1;38;2;0;240;255m==> Own commands (bin/ -> ~/.local/bin)[0m
+  [33m[changed][0m /home/roy/.local/bin/neonarch-clean -> bin/neonarch-clean
+  [33m[changed][0m /home/roy/.local/bin/neonarch-health -> bin/neonarch-health
+  [32m[ok][0m      /home/roy/.local/bin/neon-boost
+  [32m[ok][0m      /home/roy/.local/bin/neon-info
+  [32m[ok][0m      /home/roy/.local/bin/neon-mem
+  [32m[ok][0m      /home/roy/.local/bin/neon-net
+  [32m[ok][0m      /home/roy/.local/bin/neon-ps
+
+[1;38;2;0;240;255m==> Summary[0m
+  2 change(s) applied. Run ./install.sh again: it should report 0 changes.
+  log: logs/install-neonarch-roy-20261112-184008.log
