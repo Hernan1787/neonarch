@@ -18,9 +18,9 @@
 | `Super + I` | System stats HUD: `neon-info` in a floating terminal | `neon-info` (`/proc`, `/sys`, syscalls) | Hernán Alonso Gutiérrez Quesada |
 | `Super + B` | "Game mode" for the focused window: nice −5 for all its threads + highest I/O priority | `neon-boost --focused` (`xdotool` → PID, `setpriority(2)`, `ioprio_set(2)`; Topic 1) | Hernán Alonso Gutiérrez Quesada |
 | `Super + Shift + S` | Manual btrfs snapshot of `/` + notification with its number | `snapper -c root create` (Topic 3) | Hernán Alonso Gutiérrez Quesada |
-| | | | Royner Baltodano Sánchez |
-| | | | Royner Baltodano Sánchez |
-| | | | Royner Baltodano Sánchez |
+| `Super + Shift + L` | Lock the screen | `i3lock -c 000000` | Royner Baltodano Sánchez |
+| `Super + Shift + K` | Terminal calculator in a new xterm | own command `neonarch-calc` | Royner Baltodano Sánchez |
+| `Super + Shift + P` | Screenshot of a selected area to `~/capturas/` | `maim -s` | Royner Baltodano Sánchez |
 
 ## Standard i3 navigation (reference, not graded)
 

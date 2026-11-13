@@ -54,6 +54,3 @@ nftables            # Topic 9: firewall
 openssh             # Topic 9: hardened SSH
 nmap                # Topic 9: scan from the other VM
 acl                 # Topic 9: setfacl / getfacl
-i3lock
-maim
-python

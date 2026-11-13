@@ -166,12 +166,12 @@ Seven of the nine topics were implemented (Table~\ref{tab:topics}). Topics 5 (IP
 \toprule
 Topic & Owner & Main artefacts & Headline result\\ \midrule
 1 Processes & Hernán & \cmd{neon-ps}, \cmd{tema01-experiment.py} & shares 69.8/22.8/7.4\,\% vs 69.7/22.8/7.5\,\%\\
-2 Memory & Royner & zram + swapfile, \cmd{neon-mem} & \textit{pending}\\
+2 Memory & Royner & zram + swapfile, stress-ng/vmstat & with zram: \cmd{so} $-$64\,\%, work $-$13\,\%\\
 3 Filesystem & Hernán & snapper, snap-pac, fio, rollback demo & writes 3.2–3.8$\times$ slower on CoW\\
 4 Services & Hernán & \cmd{neon-health.service} + timer & quota 20\,\% $\rightarrow$ 19.8\,\% measured\\
 6 Packages & Hernán & ALPM hook, \cmd{neonarch-tools} PKGBUILD & hook in every transaction\\
 7 Boot & Hernán & boot measurement, 2 optimisations, rescue & lz4 +10\,\% slower; defaults kept\\
-9 Security & Royner & nftables, SSH, sudoers, ACL & \textit{pending}\\
+9 Security & Royner & nftables, SSH, sudoers, ACL & default deny; keys only; 2 tests to redo\\
 \bottomrule
 \end{tabular}
 \caption{Implemented topics.}
@@ -208,11 +208,25 @@ run 3 & 93.99\,\% & 5.04\,\%\\
 
 % ------------------------------------------------------------------ T2
 \subsection{Topic 2 — Memory}
-\textbf{Implementation.} zram (\cmd{zram-generator}: 50\,\% of RAM, zstd, priority 100) and a 2\,GiB NOCOW swapfile on \cmd{@swap} (priority 10): the kernel uses the highest priority first, so pages go to compressed RAM (microseconds) before the disk (milliseconds). VM tuning for zram (\cmd{vm.swappiness=180}, \cmd{vm.page-cluster=0}). Real-time monitor \cmd{neon-mem}: RAM, swap devices and priorities, zram compression ratio, swap-in/out and major faults per second, top processes by page faults.
+\textbf{Implementation} (on \cmd{neonarch-roy}, 2\,GiB RAM). zram via \cmd{zram-generator} (RAM/2 $\approx$ 970\,MiB, zstd, priority 100) and a 2\,GiB NOCOW swapfile on \cmd{@swap} (default priority): the kernel uses the highest-priority swap first, so pages go to compressed RAM (microseconds of CPU) before the disk (milliseconds of I/O). Tuning for zram: \cmd{vm.swappiness=180}, \cmd{vm.page-cluster=0}.
 
-\textbf{Method.} \cmd{stress-ng --vm} allocating MemAvailable + 1.5\,GiB for 60\,s, with and without zram; \cmd{vmstat} \cmd{si/so}, deltas of \cmd{pswpin}/\cmd{pswpout}/\cmd{pgmajfault}, zram \cmd{mm\_stat}, throughput and OOM-killer messages.
+\textbf{Method.} \cmd{scripts/measure-swap-zram.sh}: \cmd{stress-ng --vm 1 --vm-bytes 3900M --vm-keep} for 180\,s (capped at 1.76\,GB with 1.61\,GB available, so the run must page), once without zram and once with it; \cmd{vmstat -w 2} (100 samples per run), \cmd{free}, \cmd{swapon --show}.
 
-\pendingbox{results and interpretation from \cmd{scripts/tema02-measure.sh} on Royner's VM (\cmd{docs/tema-02-memoria.md}).}
+\begin{table}[H]
+\centering\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Metric (mean over the run) & Without zram & With zram & Change\\ \midrule
+\cmd{vmstat si} (KiB/s swapped in) & 15.5 & 23.6 & +52\,\%\\
+\cmd{vmstat so} (KiB/s swapped out) & 226.0 & 80.6 & $-$64\,\%\\
+\cmd{wa} (\% I/O wait) & 0.0 & 0.0 & —\\
+stress-ng throughput (bogo ops/s) & 1908.7 & 1654.8 & $-$13\,\%\\
+\bottomrule
+\end{tabular}
+\caption{Memory pressure with and without zram (\cmd{docs/evidence/tema2-neonarch-roy/}).}
+\end{table}
+
+\textbf{Interpretation.} zram changes the paging profile rather than speeding the load up: with zram the swap-out rate fell by 64\,\% and swap-in rose, because evicting a page to compressed RAM is cheap. vmstat's \cmd{si}/\cmd{so} count traffic to \emph{any} swap device, zram included, so they do not isolate disk traffic; the swapfile still ended with 68\,MiB used. The cost is CPU: 13\,\% less work, consistent with zstd on 2 vCPUs. \cmd{wa} stayed at 0 because the virtual disk sits on the host's NVMe SSD, which hides the I/O penalty zram avoids on slow disks. No OOM kill occurred. zram pays off when the disk is slow or must not wear; with a fast disk and a busy CPU its benefit is smaller.
 
 % ------------------------------------------------------------------ T3
 \subsection{Topic 3 — Filesystem (btrfs)}
@@ -283,11 +297,11 @@ allocate beyond 64\,MiB & OOM kill, restart (0$\rightarrow$1)\\
 
 % ------------------------------------------------------------------ T9
 \subsection{Topic 9 — Protection and security}
-\textbf{Implementation.} Users \cmd{operator} (sudo restricted to restarting/inspecting \cmd{neon-health}) and \cmd{guest} (no sudo); shared directory \cmd{/srv/neonlab} (\cmd{root:neonlab}, mode 2770, setgid, ACLs: operator rwx, guest r-x, default ACLs); nftables with input policy \emph{drop} (loopback, established/related, rate-limited ICMP and SSH); SSH with keys only, no root login, \cmd{AllowGroups wheel}; plus the sandboxing of Topic~4 and the root-only ESP.
+\textbf{Implementation} (on \cmd{neonarch-roy}). nftables with \emph{input policy drop} (allowed: loopback, established/related, ICMP, TCP~22; invalid dropped); sudoers where \cmd{roy} may run \emph{without password} only \cmd{systemctl restart/status sshd} and pacman queries (\cmd{-Q}, \cmd{-Qi}, \cmd{-Ql}), all files validated with \cmd{visudo -c}; ACLs on \cmd{/srv/neonarch-shared} (owner rwx, user \cmd{tester} rwx, nobody else, with default ACLs inherited by new files); SSH with \cmd{PermitRootLogin no}, \cmd{PasswordAuthentication no} (ed25519 key), \cmd{MaxAuthTries 3}, \cmd{X11Forwarding no}. Plus the sandbox of Topic~4 and the root-only ESP.
 
-\textbf{Method.} Positive and \emph{negative} tests (denied writes, denied sudo commands, refused password login, dropped packets in the kernel log) with \cmd{scripts/tema09-tests.sh}; \cmd{nmap} from another machine with and without the firewall.
+\textbf{Results.} \cmd{nft list ruleset}, \cmd{sshd -T}, \cmd{getfacl} and \cmd{visudo -c} confirm the configuration in force; a file created by \cmd{tester} inherited the ACL (\cmd{-rw-rw----+}). Two tests are not valid yet and are reported as such: the ACL ``cannot delete'' test targeted a file that did not exist, and the recorded \cmd{nmap} scan was run against Nmap's public test host (\cmd{scanme.nmap.org}) instead of the VM. Both must be repeated against \cmd{neonarch-roy}.
 
-\pendingbox{results and interpretation on Royner's VM (\cmd{docs/tema-09-seguridad.md}).}
+\textbf{Interpretation.} The layers are independent (defence in depth): with \cmd{policy drop} an unlisted port gives no answer, so nmap reports it as \emph{filtered} rather than \emph{closed}; without passwords, SSH brute force has nothing to guess; sudo limits what runs without authentication. \cmd{roy} remains in \cmd{wheel} (\cmd{ALL} with password, kept for the project's scripts), so the restriction covers password-less execution, not everything; a stricter design removes the user from \cmd{wheel}.
 
 % ================================================================== 3
 \section{Layer 3 — Own commands and shortcuts}
@@ -300,11 +314,13 @@ Command & Author & OS interfaces\\ \midrule
 \cmd{neon-ps} & Hernán & \cmd{/proc/[pid]/stat}, \cmd{setpriority}, \cmd{sched\_setscheduler}, \cmd{sched\_setaffinity}\\
 \cmd{neon-boost} & Hernán & \cmd{/proc/[pid]/task}, \cmd{setpriority}, \cmd{ioprio\_set}; restricted sudoers rule\\
 \cmd{neon-net} & Hernán & \cmd{/proc/net/dev}, \cmd{/sys/class/net}, \cmd{ioctl(SIOCGIFADDR)}\\
-\cmd{neon-mem} & Royner & \cmd{/proc/\{meminfo, swaps, vmstat, [pid]/stat\}}, \cmd{/sys/block/zram*/mm\_stat}\\
-\textit{2 more} & Royner & \textit{pending}\\
+\cmd{neon-mem} & Hernán & \cmd{/proc/\{meminfo, swaps, vmstat, [pid]/stat\}}, \cmd{/sys/block/zram*/mm\_stat} (Topic 2 monitor)\\
+\cmd{neonarch-health} & Royner & health check: \cmd{/proc}, \cmd{/sys}, \cmd{systemctl --failed}, \cmd{journalctl -p err}, \cmd{btrfs filesystem usage}, snapshots, orphans; exit code 0/1/2\\
+\cmd{neonarch-clean} & Royner & safe cleanup, dry-run by default: pacman cache, journal vacuum, old snapshots, orphans; btrfs usage before/after\\
+\cmd{neonarch-calc} & Royner & terminal calculator\\
 \bottomrule
 \end{tabularx}
-\caption{Own commands (also packaged as \cmd{neonarch-tools}, Topic~6).}
+\caption{Own commands (Hernán's are also packaged as \cmd{neonarch-tools}, Topic~6).}
 \end{table}
 
 \begin{figure}[H]
@@ -313,7 +329,7 @@ Command & Author & OS interfaces\\ \midrule
 \caption{\cmd{neon-info} on \cmd{neonarch-hernan}: every value is read from \cmd{/proc}, \cmd{/sys} or a system call (\cmd{neon-info --sources} prints which). It reports the EEVDF scheduler, the virtual GPU with its driver (\cmd{vmwgfx}), zram and the btrfs root subvolume.}
 \end{figure}
 
-Mandatory shortcuts: \emph{Super+Enter} terminal, \emph{Super+W/Q} close, \emph{Super+D} rofi, \emph{Super+1…9} workspaces. Hernán's: \emph{Super+I} \cmd{neon-info} in a floating window, \emph{Super+B} \cmd{neon-boost} on the focused window, \emph{Super+Shift+S} manual btrfs snapshot with a notification. The last one collided with the host: Windows' screenshot shortcut (Win+Shift+S) reached the VM first and created snapshots \#17 and \#19 while we were taking screenshots. Full list: \cmd{docs/cheatsheet.md}.
+Mandatory shortcuts: \emph{Super+Enter} terminal, \emph{Super+W/Q} close, \emph{Super+D} rofi, \emph{Super+1…9} workspaces. Hernán's: \emph{Super+I} \cmd{neon-info} in a floating window, \emph{Super+B} \cmd{neon-boost} on the focused window, \emph{Super+Shift+S} manual btrfs snapshot with a notification. The last one collided with the host: Windows' screenshot shortcut (Win+Shift+S) reached the VM first and created snapshots \#17 and \#19 while we were taking screenshots. Royner's: \emph{Super+Shift+L} lock screen (\cmd{i3lock}), \emph{Super+Shift+K} \cmd{neonarch-calc}, \emph{Super+Shift+P} area screenshot (\cmd{maim -s}). Full list: \cmd{docs/cheatsheet.md}.
 
 % ================================================================== 4
 \section{Limitations}
@@ -321,6 +337,7 @@ Mandatory shortcuts: \emph{Super+Enter} terminal, \emph{Super+W/Q} close, \emph{
 \item \textbf{Virtualisation.} All measurements run in VirtualBox over a VDI file. The host's cache and SSD, and the host's own activity, add noise. Boot times varied by up to 0.4\,s between identical boots. Firmware/loader times and real GPU/NPU behaviour are not observable.
 \item \textbf{Repetitions.} 3 runs per benchmark and 3 boots per variant are enough to see large effects (CoW writes, lz4) but not small ones (the ``slim'' initramfs).
 \item \textbf{Synthetic loads.} fio writes incompressible random data, which removes the benefit of \cmd{compress=zstd}; stress-ng memory pages compress far better than real data.
+\item \textbf{Open items.} Topic 9's external nmap scan and ACL denial test must be repeated against the VM (see Topic~9).
 \item \textbf{Scope.} Topics 5 and 8 were not implemented; the snapper rollback shown is file-level (\cmd{undochange}), not a full subvolume rollback.
 \end{itemize}
 

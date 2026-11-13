@@ -90,17 +90,21 @@ neonarch/
 | `neon-ps` | Process tool for Topic 1: lists PID, PPID, state, nice, policy, RT priority, CPU and %CPU; changes nice, scheduling policy (OTHER/BATCH/IDLE/FIFO/RR) and CPU affinity. | `/proc/[pid]/stat`, `getpriority/setpriority(2)`, `sched_setscheduler(2)`, `sched_getparam(2)`, `sched_setaffinity(2)` | Hernán Alonso Gutiérrez Quesada |
 | `neon-boost` | "Game mode": nice −5 for every thread of a process + best-effort I/O level 0; `--undo`; `--focused` boosts the focused window (shortcut `Super+B`). | `/proc/[pid]/task`, `setpriority(2)`, `ioprio_set(2)` | Hernán Alonso Gutiérrez Quesada |
 | `neon-net` | Interfaces with state, IPv4, MAC, MTU, speed and live RX/TX rates; `-w` to watch. | `/proc/net/dev`, `/sys/class/net/*`, `ioctl(SIOCGIFADDR)` | Hernán Alonso Gutiérrez Quesada |
-| `neon-mem` | Real-time memory monitor for Topic 2: RAM, swap devices and priorities, zram compression ratio, swap-in/out and major faults per second, top processes by page faults. | `/proc/meminfo`, `/proc/swaps`, `/proc/vmstat`, `/proc/[pid]/stat`, `/sys/block/zram*/mm_stat` | Royner Baltodano Sánchez |
+| `neon-mem` | Real-time memory monitor for Topic 2: RAM, swap devices and priorities, zram compression ratio, swap-in/out and major faults per second, top processes by page faults. | `/proc/meminfo`, `/proc/swaps`, `/proc/vmstat`, `/proc/[pid]/stat`, `/sys/block/zram*/mm_stat` | Hernán Alonso Gutiérrez Quesada (support for Topic 2) |
+| `neonarch-health` | System health check: kernel vs modules, zram, swap, btrfs usage, failed units, snapshots, orphans, pending updates, journal errors, temperature; exit code 0/1/2. | `/proc`, `/sys`, `systemctl --failed`, `journalctl -p err`, `btrfs filesystem usage`, `snapper` | Royner Baltodano Sánchez |
+| `neonarch-clean` | Safe cleanup (dry-run by default): pacman cache, journal, old snapshots, orphans; shows btrfs usage before/after. | `pacman`, `journalctl --vacuum`, `snapper`, `btrfs` | Royner Baltodano Sánchez |
+| `neonarch-calc` | Quick terminal calculator (shortcut `Super+Shift+K`). | `python3` | Royner Baltodano Sánchez |
 
 ## Project status
 
 | Item | Status |
 |---|---|
-| Layer 1: manual install, bootstrap, DE/WM justified | ✅ Hernán · ⏳ Royner's install |
-| Topics 1, 3, 4, 6, 7 (Hernán): implemented, measured, evidence sheets | ✅ |
-| Topics 2, 9 (Royner) | ⏳ scripts ready, measurements pending |
-| Layer 3: `neon-info` + own commands + shortcuts | ✅ Hernán (3 commands, 3 shortcuts) · ⏳ Royner |
-| Final report | 🟡 draft: Topics 2 and 9 pending |
+| Layer 1: manual install (both members), bootstrap, DE/WM justified | ✅ |
+| Topics 1, 3, 4, 6, 7 (Hernán) | ✅ measured, evidence sheets complete |
+| Topic 2 (Royner) | ✅ measured |
+| Topic 9 (Royner) | 🟡 configured and documented; external nmap scan and ACL negative test to be repeated |
+| Layer 3: commands and shortcuts (both members) | ✅ |
+| Final report | ✅ `docs/report/NeonArch_Final_Report.pdf` |
 
 ## Sources and credits
 - [Arch Wiki — Installation guide](https://wiki.archlinux.org/title/Installation_guide), [btrfs](https://wiki.archlinux.org/title/Btrfs), [systemd-boot](https://wiki.archlinux.org/title/Systemd-boot), [i3](https://wiki.archlinux.org/title/I3)
