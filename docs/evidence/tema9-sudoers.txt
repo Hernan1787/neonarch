@@ -1,13 +1,6 @@
-# NeonArch — reglas de sudo restringidas (Tema 9)
-# El grupo wheel NO tiene ALL. Solo comandos concretos, y con log.
-
-# Roy puede gestionar servicios systemd sin password (útil para el proyecto)
+# NeonArch — sudo rules (Tema 9)
 roy ALL=(root) NOPASSWD: /usr/bin/systemctl restart sshd, /usr/bin/systemctl status sshd
-
-# Roy puede usar pacman solo para consultas (no instalar)
 roy ALL=(root) /usr/bin/pacman -Q, /usr/bin/pacman -Qi, /usr/bin/pacman -Ql
-
-# El resto de comandos del grupo wheel requieren password y quedan logueados
 %wheel ALL=(ALL:ALL) ALL
 /etc/sudoers: parsed OK
 /etc/sudoers.d/10-neonarch: parsed OK

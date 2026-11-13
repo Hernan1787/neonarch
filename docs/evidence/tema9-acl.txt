@@ -1,6 +1,8 @@
+getfacl: Removing leading '/' from absolute path names
 # file: srv/neonarch-shared
 # owner: roy
 # group: roy
+# flags: --t
 user::rwx
 user:tester:rwx
 group::---
@@ -12,8 +14,4 @@ default:group::---
 default:mask::rwx
 default:other::---
 
-total 4
-drwxrwx---+ 1 roy    roy    20 Nov 12 17:08 .
-drwxr-xr-x  1 root   root   44 Nov 12 17:07 ..
--rw-rw----+ 1 tester tester  7 Nov 12 17:08 tester.txt
-rm: cannot remove '/srv/neonarch-shared/roy.txt': No such file or directory
+drwxrwx--T+ 1 roy roy 20 Nov 12 17:08 /srv/neonarch-shared

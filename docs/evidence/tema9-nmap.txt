@@ -1,12 +1,10 @@
-Starting Nmap 7.993 ( https://nmap.org ) at 2026-11-12 18:23 -0600
-Nmap scan report for scanme.nmap.org (45.33.32.156)
-Host is up (0.099s latency).
-Other addresses for scanme.nmap.org (not scanned): 2600:3c01::f03c:91ff:fe18:bb2f
-rDNS record for 45.33.32.156: 156.32.33.45.in-addr.arpa
+Starting Nmap 7.993 ( https://nmap.org ) at 2026-11-13 12:12 -0600
+Nmap scan report for localhost (127.0.0.1)
+Host is up (0.000049s latency).
 
-PORT    STATE    SERVICE
-22/tcp  open     ssh
-80/tcp  open     http
-443/tcp filtered https
+PORT    STATE  SERVICE
+22/tcp  open   ssh
+80/tcp  closed http
+443/tcp closed https
 
-Nmap done: 1 IP address (1 host up) scanned in 1.78 seconds
+Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
